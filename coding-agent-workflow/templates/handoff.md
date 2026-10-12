@@ -1,10 +1,16 @@
+---
+task: <任务目录名>
+status: planned
+owner: <负责人：人 或 agent>
+updated: <YYYY-MM-DD>
+---
+
 # Task Handoff
 
-> 用途：任务的恢复入口。保持精简，只放"下次进来必须知道的东西"。
-
-## Status
-
-planned | in_progress | blocked | in_review | done | abandoned
+> 用途：任务的恢复入口。只放"下次进来必须知道的东西"，正文尽量控制在一屏内；
+> 细节回链到 `plan.md` / `analysis.md`，不要在这里复述。
+> `status` 只允许：planned / in_progress / blocked / in_review / done / abandoned
+> `updated` 每次收工都要改成当天日期，供脚本检查任务是否停滞。
 
 ## Goal
 

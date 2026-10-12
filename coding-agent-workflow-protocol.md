@@ -1,6 +1,14 @@
-# 编程 Agent 协作协议（Coding Agent Collaboration Protocol）v1 · 草案
+# 编程 Agent 协作协议（Coding Agent Collaboration Protocol）v1.1
 
 > 一句话定位：这不是一个 Skill，而是一套「以文件系统为载体、以 Git 为版本历史、以编程 Agent 为执行者、以 Skill 为工作流入口」的协作协议。Skill 只是它的一个实现层。
+
+## v1.1 变更摘要
+
+相对 v1 的三处修改，全部针对"协议能不能稳定运行"：
+
+1. **`AGENTS.md` 升级为协议锚点。** Skill 按需加载、可能不触发；`AGENTS.md` 每会话必读。四条铁律写进 `AGENTS.md`，协议从此不依赖 Skill 是否被触发。新增 `templates/AGENTS.md` 与 `scripts/init-project.sh`。
+2. **明确 `work/` 与 Git 的关系。** `docs/`、`work/` 默认都纳入版本控制；原始日志走 `scratch/` 并 gitignore；任务目录改用 `YYYYMMDD-<短语>` 作为主键，降低并行撞号。
+3. **`handoff.md` 加 front-matter。** `task/status/owner/updated` 变成机读字段，`check-project.sh` 据此校验状态合法性并标出停滞任务。
 
 ## 0. 它要解决的真实问题
 
@@ -77,7 +85,7 @@ my-project/
 
 | 位置 | 负责什么 | 不负责什么 |
 | --- | --- | --- |
-| `AGENTS.md` | 稳定且必须遵守的项目规则、目录导航、测试命令、文档维护要求、不同任务该读哪些文档 | 不做项目百科全书，只是 Agent 进入项目的导航页 |
+| `AGENTS.md` | **协议锚点**：四条铁律，加项目规则、目录导航、测试命令、任务路由（每会话必读） | 不做项目百科全书，只是 Agent 进入项目的导航页 |
 | `docs/` | 长期有效的项目知识：目标、需求、架构、重要决策、开发约定 | 不记录某个一次性任务的过程 |
 | `work/active/` | 当前任务的工作空间：需求澄清、调查、方案比较、实施计划、验证结果、交接 | 不放本该成为正式测试/脚本的内容 |
 | `work/archive/` | 已结束任务的重要方案、关键过程、验证证据，供排障与复用 | 不保存临时调试日志、重复草稿、无效实验 |
@@ -161,13 +169,17 @@ my-project/
 
 ## 6. 状态与恢复机制
 
-Skill 可以规定「怎么恢复」，但最好把状态设计成一个**明确的数据结构**。每个活跃任务维护一份精简的 `handoff.md`：
+Skill 可以规定「怎么恢复」，但最好把状态设计成一个**明确的数据结构**：`handoff.md` 顶部用 front-matter 承载机读字段，正文承载人读内容。
 
 ```markdown
-# Task Handoff
+---
+task: 20261010-add-auth
+status: in_progress
+owner: aha
+updated: 2026-10-10
+---
 
-## Status
-in_progress
+# Task Handoff
 
 ## Goal
 本任务希望解决什么问题。
@@ -195,7 +207,7 @@ in_progress
 - 相关决策记录
 ```
 
-它应是**精简的恢复入口**，不是又一份冗长报告。恢复顺序：
+它应是**精简的恢复入口**（正文一屏以内），不是又一份冗长报告；细节回链到 `plan.md` / `analysis.md`。恢复顺序：
 
 1. 读 `AGENTS.md`，了解项目规则。
 2. 读当前任务的 `handoff.md`。
@@ -230,19 +242,30 @@ in_progress
    让 Agent 自动识别项目类型、建立任务工作区、按任务复杂度生成文档、执行中更新状态、结束时完成交接。
    *验收*：中途打断一个任务、开新会话后，Agent 能依据文件恢复工作，不会无故重做已完成的分析。
 
-3. **阶段三 · 用脚本强化约束**
-   加入项目初始化、文档完整性检查、过期任务检查、归档规则、必要的 Git 集成。
+3. **阶段三 · 用脚本与 CI 强化约束**
+   v1.1 已提供项目初始化、完整性检查、停滞检测的基础脚本；阶段三把它们接进 hooks 或 CI，让约束真正变为强制，并补上归档与文档一致性校验。
    *验收*：常见的遗漏能被脚本自动发现，而不是完全依赖 Agent 遵守提示词。
 
-## 9. v1 下一步
+## 9. v1.1 待办
 
-- [ ] 冻结目录树与命名规则（见 `coding-agent-workflow/references/file-conventions.md`）。
-- [ ] 冻结任务状态定义（见 `coding-agent-workflow/references/handoff-protocol.md`）。
-- [ ] 冻结六阶段与阶段切换条件（见 `coding-agent-workflow/references/workflow.md`）。
-- [ ] 固化中间产出保留策略（见 `coding-agent-workflow/references/artifact-policy.md`）。
-- [ ] 把主 Skill 装到 `$CODEX_HOME/skills`，在 1 个真实项目上试跑，再迭代。
+- [x] 生成 `AGENTS.md` 入口（常驻锚点）。
+- [x] 明确 `work/` 与 Git 的关系与任务编号规则。
+- [x] `handoff.md` 加 front-matter，脚本可校验。
+- [ ] 把技能包装到 `$CODEX_HOME/skills`（或 `~/.codex/skills`），在 1 个真实项目上跑通"中断 → 恢复"。
+- [ ] 用 `check-project.sh` 的实际输出回头校准 front-matter 字段。
 
 配套技能包位于同目录的 `coding-agent-workflow/`，可直接安装使用。
+
+## 10. 已知局限（v1.1 仍未解决）
+
+诚实列出来，避免把"设计完成"误当成"问题解决"：
+
+- **并发写仍靠约定。** front-matter 让冲突可见、可合并，但没有锁；两个 Agent 同时写同一 `handoff.md` 仍可能覆盖。
+- **触发不可强制。** `AGENTS.md` 是软约束，Agent 仍可能不遵守；真正强制要靠 hooks 或 CI。
+- **场景未覆盖**：探索型 spike（"此路不通"也是结论）、紧急 hotfix 的轻量通道、长周期重构的里程碑、团队 review 与 ownership、跨项目全局层、协议自身的升级迁移，以及不用 Git 的项目。
+- **文档与代码的一致性**仍靠"恢复时核对"被动发现，没有主动校验。
+- **检查是本地、可选的**，没有 CI 集成，不跑就等于没有。
+- **成本阈值仍靠人判断**："简单任务可以只留 handoff"缺一个客观判据。
 
 ---
 

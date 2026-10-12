@@ -11,15 +11,29 @@
 | `done` | 已完成验证，结论已沉淀 |
 | `abandoned` | 主动放弃，需记录原因与可能的后续 |
 
-状态写在 `handoff.md` 的 `## Status`。
+状态写在 `handoff.md` 顶部的 front-matter 里，让人和脚本都能读。
+
+## front-matter 字段
+
+| 字段 | 必填 | 说明 |
+| --- | --- | --- |
+| `task` | 是 | 任务目录名（与目录保持一致） |
+| `status` | 是 | 必须是上表六个状态之一 |
+| `owner` | 是 | 当前负责人（人或 agent） |
+| `updated` | 是 | 最后更新日期 `YYYY-MM-DD`，每次收工都要改 |
+| `branch` | 否 | 关联分支 / worktree，便于并行协作 |
+
+`status` 与 `updated` 是脚本检查的锚点，其余正文允许自由书写。
 
 ## `handoff.md` 结构
 
 ```markdown
-# Task Handoff
-
-## Status
-in_progress
+---
+task: 20261010-add-auth
+status: in_progress
+owner: aha
+updated: 2026-10-10
+---
 
 ## Goal
 本任务希望解决什么问题。
@@ -63,7 +77,19 @@ in_progress
 
 - **不要重新开始**：已有任务目录存在时，先读再判断，不覆盖已有分析。
 - **不要盲信文档**：文档与代码冲突时，以代码为准并修正文档。
-- **进度变化要写回**：每次阶段推进或中断前，更新 `handoff.md` 的 Status、Completed、Current State、Next Actions。
+- **进度变化要写回**：每次阶段推进或中断前，更新 `handoff.md` 的 `status`、`Completed`、`Current State`、`Next Actions`、`updated`。
+
+## 长度约束
+
+`handoff.md` 是恢复入口，不是报告。**正文目标控制在一屏以内**。一旦超了，说明细节该挪走：实施细节 → `plan.md`、方案权衡 → `analysis.md`、长期结论 → `docs/`、原始输出 → 不入库（或 `scratch/`，已被 gitignore）。
+
+## 并发写入
+
+front-matter 让冲突**可见**，但不解决覆盖。约定：
+
+- **同一任务同一时间只允许一个写者**（一个人或一个 agent）。
+- 确需并行时，用**分支或 worktree 隔离**，各写各自的副本。
+- 合并前先比对双方 `updated`：以晚的一方为基线，逐条合并 `Completed` / `Next Actions`，不要整段覆盖。
 
 ## 归档
 

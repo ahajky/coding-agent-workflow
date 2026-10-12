@@ -64,5 +64,17 @@ if [ "$MINIMAL" -eq 0 ]; then
   render validation.md validation.md
 fi
 
+# 自动填入 handoff 的 front-matter：任务名与当天日期
+TASK_NAME="$(basename "$TASK_DIR")"
+TODAY="$(date +%Y-%m-%d)"
+HANDOFF="$TASK_DIR/handoff.md"
+if [ -f "$HANDOFF" ]; then
+  if sed --version >/dev/null 2>&1; then
+    sed -i "s/<任务目录名>/$TASK_NAME/g; s/<YYYY-MM-DD>/$TODAY/g" "$HANDOFF"
+  else
+    sed -i '' "s/<任务目录名>/$TASK_NAME/g; s/<YYYY-MM-DD>/$TODAY/g" "$HANDOFF"
+  fi
+fi
+
 echo "已创建任务工作区: $TASK_DIR"
 ls -1 "$TASK_DIR"

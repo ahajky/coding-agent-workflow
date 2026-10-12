@@ -1,0 +1,51 @@
+# AGENTS.md
+
+> 本文件是编程 Agent 进入本项目的入口，请在**任何任务开始前**读完本文件。
+
+## 项目定位
+
+<一句话说明项目是什么、为谁解决什么问题。>
+
+## 工作流铁律（必须遵守）
+
+本项目使用「编程 Agent 协作工作流」。以下四条不可省略：
+
+1. **开工先恢复上下文**：任何任务开始前，先看 `work/active/` 下是否有相关任务目录；有就读它的 `handoff.md`，据此继续，**不要重新分析、不要覆盖已有成果**。
+2. **收工必写回状态**：任务完成或中断前，更新 `handoff.md` 的 `status`、`Completed`、`Current State`、`Next Actions`、`updated`。
+3. **尊重信息归属**：长期结论写进 `docs/`，任务过程留在 `work/active/<任务>/`，同一份信息只在权威位置维护。
+4. **不写敏感信息**：文档中不出现密钥、token、密码、内网地址、客户个人数据。
+
+重活（新功能、重构、调研）按六阶段推进：发现 → 设计 → 计划 → 实施 → 验证 → 交接；小修可以不建完整文档，但**第 1、2 条不豁免**。完整规则见 `coding-agent-workflow` 技能。
+
+## 目录导航
+
+| 位置 | 内容 |
+| --- | --- |
+| `docs/product/` | 项目目标与需求 |
+| `docs/architecture/` | 当前有效架构、代码地图 |
+| `docs/decisions/` | 重要技术决策（ADR） |
+| `docs/guides/` | 开发约定、上手文档 |
+| `work/active/<任务>/` | 当前任务工作区（含 handoff.md） |
+| `work/archive/` | 已结束任务 |
+
+## 常用命令
+
+```bash
+# 安装依赖
+<命令>
+
+# 运行测试
+<命令>
+
+# 代码检查
+<命令>
+
+# 本地运行
+<命令>
+```
+
+## 任务路由
+
+- 修 Bug：先读 `docs/architecture/codebase-map.md` 和相关任务的 `handoff.md`。
+- 加功能：先读 `docs/product/requirements.md` 和 `docs/architecture/overview.md`。
+- 重构 / 迁移：先读 `docs/decisions/`，确认既有约束再动手。

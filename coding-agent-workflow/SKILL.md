@@ -1,6 +1,6 @@
 ---
 name: coding-agent-workflow
-description: 为软件项目建立并维护一套人与编程 Agent 共用的文件与文档工作流：识别项目类型、建立任务工作区、按阶段推进、保存有价值的中间产出、在中断后恢复状态并完成交接归档。用于接手已有项目、从零开始一个构思、或把现有项目的协作流程规范化。
+description: 为软件项目建立并维护一套人与编程 Agent 共用的文件与文档工作流：生成 AGENTS.md 入口、建立任务工作区、按阶段推进、保存有价值的中间产出、在中断后恢复状态并完成交接归档。用于接手已有项目、从零开始一个构思、或把现有项目的协作流程规范化。
 metadata:
   short-description: 编程 Agent 协作工作流
 ---
@@ -30,7 +30,9 @@ metadata:
 
 ### 1. 建立或恢复上下文
 
-先读项目入口（`AGENTS.md`，没有就参照 `references/file-conventions.md` 判断是否需要建立），再判断这是"新任务"还是"恢复已有任务"。
+先读项目入口 `AGENTS.md`。它是协议的**常驻锚点**——Skill 可能不被触发，但 `AGENTS.md` 每次会话都会被读取，所以协议要靠它兜底。若项目里还没有 `AGENTS.md`，先用 `scripts/init-project.sh` 生成（规则见 `references/agents-md.md`），再继续。
+
+然后判断这是"新任务"还是"恢复已有任务"。
 
 - 若 `work/active/` 下已存在相关任务目录，**先读它的 `handoff.md`**，据此恢复，不要重新分析并覆盖已有成果。恢复顺序见 `references/handoff-protocol.md`。
 - 若是新任务，先判断项目状态：已有项目走"梳理现状"，全新项目走"澄清构思"。
@@ -54,14 +56,15 @@ metadata:
 
 ### 5. 交接与归档
 
-把长期有效的结论沉淀到 `docs/`，把任务结论与下一步写入 `handoff.md`，结束的任务移入 `work/archive/`。写入规则见 `references/handoff-protocol.md`。
+把长期有效的结论沉淀到 `docs/`，把任务结论与下一步写入 `handoff.md`（含 `status`/`updated` 的 front-matter），结束的任务移入 `work/archive/`。写入规则见 `references/handoff-protocol.md`。
 
 ## 参考文件（按需加载）
 
 - [references/workflow.md](references/workflow.md)：六阶段详细流程、阶段门槛、循环回退。
+- [references/agents-md.md](references/agents-md.md)：`AGENTS.md` 常驻入口的四条铁律与嵌套约定。
 - [references/file-conventions.md](references/file-conventions.md)：目录树、各目录职责、信息权威来源、命名规则。
 - [references/artifact-policy.md](references/artifact-policy.md)：A/B/C 三级保留策略、决策记录与过程记录的区分。
-- [references/handoff-protocol.md](references/handoff-protocol.md)：任务状态定义、`handoff.md` 结构、恢复顺序。
+- [references/handoff-protocol.md](references/handoff-protocol.md)：任务状态定义、`handoff.md` front-matter 与结构、恢复顺序、并发约定。
 
 ## 模板（复制到任务目录后填写）
 
@@ -74,7 +77,8 @@ metadata:
 
 ## 脚本（确定性操作）
 
-- `scripts/init-task.sh <任务目录> [--title 标题] [--minimal]`：按模板创建任务工作区（`--minimal` 只建 `handoff.md`）。
-- `scripts/check-project.sh [项目根]`：检查必需文件与任务目录完整性。
+- `scripts/init-project.sh [项目根] [--name 项目名]`：为一个项目生成 `AGENTS.md`、`README.md` 与目录骨架（不覆盖已存在文件）。
+- `scripts/init-task.sh <任务目录> [--title 标题] [--minimal]`：按模板创建任务工作区并填好 `handoff` 的 front-matter（`--minimal` 只建 `handoff.md`）。
+- `scripts/check-project.sh [项目根]`：检查必需文件、`AGENTS.md` 铁律、每个任务 front-matter 的合法性，并标出停滞任务（`STALE_DAYS` 可调，默认 30）。
 
 脚本仅负责确定性动作（建目录、查缺失），不要用提示词替代它们，也不要让 Agent 手工重复这些步骤。
