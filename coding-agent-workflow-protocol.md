@@ -2,7 +2,7 @@
 
 > 一句话定位：这不是一个 Skill，而是一套「以文件系统为载体、以 Git 为版本历史、以编程 Agent 为执行者、以 Skill 为工作流入口」的协作协议。Skill 只是它的一个实现层。
 
-**当前版本：1.1.3**
+**当前版本：1.1.4**
 
 ## 版本号约定
 
@@ -21,6 +21,7 @@
 | 1.1.1 | 补齐隐性定义与产物清单：`scratch/` 正式定义、`docs/guides/` 进权威表、`work/archive/` 补入恢复入口、模板清单按落点重写、`task-brief.md` 改名 `brief.md` |
 | 1.1.2 | `updated` 精确到分钟；新增 `phase` 字段让六阶段可见；占位符统一为 `<...>`；`check-project.sh` 扩展检查面 |
 | 1.1.3 | 版本号约定写入本文；**弃用任务分级**，改为"最小模板 + 按需补充" |
+| 1.1.4 | 反转上一条的取舍：`brief.md` / `plan.md` / `handoff.md` 改为**每个任务都建**（内容可短），只有 `validation.md` / `analysis.md` 保留触发条件 |
 
 ## 0. 它要解决的真实问题
 
@@ -81,11 +82,11 @@ my-project/
 ├── work/                     # 任务工作区（过程产出）
 │   ├── active/
 │   │   └── 20261010-add-auth/
-│   │       ├── handoff.md    # 必需，所有任务都有
-│   │       ├── plan.md       # 按需
-│   │       ├── validation.md # 按需
-│   │       ├── brief.md      # 按需
-│   │       ├── analysis.md   # 按需
+│   │       ├── brief.md      # 必备，可写得很短
+│   │       ├── plan.md       # 必备，可写得很短
+│   │       ├── handoff.md    # 必备，每次收工更新
+│   │       ├── validation.md # 按需（跑过测试就该写）
+│   │       ├── analysis.md   # 按需（有备选方案才写）
 │   │       └── scratch/      # 临时产物（不入库）
 │   └── archive/              # 已结束任务的历史记录
 ├── src/

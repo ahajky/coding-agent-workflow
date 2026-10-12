@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 初始化一个任务工作区（从 templates/ 复制模板）。
-# 用法: init-task.sh <任务目录> [--title 标题] [--full]
-#   --full  除 handoff.md 外，再创建 brief.md / plan.md / validation.md
+# 用法: init-task.sh <任务目录> [--title 标题]
+# 始终创建 brief.md、plan.md、handoff.md 三个必备文档。
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -9,19 +9,15 @@ TEMPLATES_DIR="$SCRIPT_DIR/../templates"
 
 TASK_DIR=""
 TITLE=""
-FULL=0
 
 while [ $# -gt 0 ]; do
   case "$1" in
     -h|--help)
-      echo "用法: init-task.sh <任务目录> [--title 标题] [--full]"
+      echo "用法: init-task.sh <任务目录> [--title 标题]"
       exit 0
       ;;
     --title)
       TITLE="${2:-}"; shift 2
-      ;;
-    --full)
-      FULL=1; shift
       ;;
     --*)
       echo "未知参数: $1" >&2; exit 2
@@ -33,7 +29,7 @@ while [ $# -gt 0 ]; do
 done
 
 if [ -z "$TASK_DIR" ]; then
-  echo "用法: init-task.sh <任务目录> [--title 标题] [--full]" >&2
+  echo "用法: init-task.sh <任务目录> [--title 标题]" >&2
   exit 2
 fi
 
@@ -57,12 +53,9 @@ render() {
   fi
 }
 
+render brief.md brief.md
+render plan.md plan.md
 render handoff.md handoff.md
-if [ "$FULL" -eq 1 ]; then
-  render brief.md brief.md
-  render plan.md plan.md
-  render validation.md validation.md
-fi
 
 # 自动填入 handoff 的 front-matter：任务名与当前时刻
 TASK_NAME="$(basename "$TASK_DIR")"
