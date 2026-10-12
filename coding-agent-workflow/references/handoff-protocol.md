@@ -17,13 +17,20 @@
 
 | 字段 | 必填 | 说明 |
 | --- | --- | --- |
-| `task` | 是 | 任务目录名（与目录保持一致） |
-| `status` | 是 | 必须是上表六个状态之一 |
+| `task` | 是 | 任务目录名。**必须与目录名一致**，脚本会校验 |
+| `status` | 是 | 任务生命周期，见上表六个取值之一 |
+| `phase` | 是 | 当前阶段：`discover` / `design` / `plan` / `execute` / `verify` / `close` |
 | `owner` | 是 | 当前负责人（人或 agent） |
-| `updated` | 是 | 最后更新日期 `YYYY-MM-DD`，每次收工都要改 |
+| `updated` | 是 | 最后更新时刻 `YYYY-MM-DD HH:MM`；精确到分钟，并发合并才能判先后 |
 | `branch` | 否 | 关联分支 / worktree，便于并行协作 |
 
-`status` 与 `updated` 是脚本检查的锚点，其余正文允许自由书写。
+`status`、`phase`、`updated` 是脚本的检查锚点，其余正文允许自由书写。
+
+### `status` 与 `phase` 的分工
+
+- `status` 回答"任务还活着吗"：`planned` / `in_progress` / `blocked` / `in_review` / `done` / `abandoned`。
+- `phase` 回答"走到六阶段的哪一步"：`discover` / `design` / `plan` / `execute` / `verify` / `close`。
+- 两者独立填写。例如实施到一半被外部因素卡住，就是 `status: blocked` + `phase: execute`。
 
 ## `handoff.md` 结构
 
@@ -31,8 +38,9 @@
 ---
 task: 20261010-add-auth
 status: in_progress
+phase: execute
 owner: aha
-updated: 2026-10-10
+updated: 2026-10-10 21:40
 ---
 
 ## Goal
@@ -89,7 +97,7 @@ front-matter 让冲突**可见**，但不解决覆盖。约定：
 
 - **同一任务同一时间只允许一个写者**（一个人或一个 agent）。
 - 确需并行时，用**分支或 worktree 隔离**，各写各自的副本。
-- 合并前先比对双方 `updated`：以晚的一方为基线，逐条合并 `Completed` / `Next Actions`，不要整段覆盖。
+- 合并前先比对双方 `updated`（精确到分钟）：以晚的一方为基线，逐条合并 `Completed` / `Next Actions`，不要整段覆盖。
 
 ## 归档
 

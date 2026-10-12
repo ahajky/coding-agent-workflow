@@ -56,7 +56,7 @@ metadata:
 
 ### 5. 交接与归档
 
-把长期有效的结论沉淀到 `docs/`，把任务结论与下一步写入 `handoff.md`（含 `status`/`updated` 的 front-matter），结束的任务移入 `work/archive/`。写入规则见 `references/handoff-protocol.md`。
+把长期有效的结论沉淀到 `docs/`，把任务结论与下一步写入 `handoff.md`（含 `status`/`phase`/`updated` 的 front-matter），结束的任务移入 `work/archive/`。写入规则见 `references/handoff-protocol.md`。
 
 ## 参考文件（按需加载）
 
@@ -92,6 +92,6 @@ metadata:
 
 - `scripts/init-project.sh [项目根] [--name 项目名]`：为一个项目生成 `AGENTS.md`、`README.md` 与目录骨架（不覆盖已存在文件）。
 - `scripts/init-task.sh <任务目录> [--title 标题] [--minimal]`：按模板创建任务工作区并填好 `handoff` 的 front-matter（`--minimal` 只建 `handoff.md`）。
-- `scripts/check-project.sh [项目根]`：检查必需文件、`AGENTS.md` 铁律、每个任务 front-matter 的合法性，并标出停滞任务（`STALE_DAYS` 可调，默认 30）。
+- `scripts/check-project.sh [项目根]`：检查必需文件与 `AGENTS.md` 铁律；校验每个任务的 front-matter（`task` 与目录名一致、`status`/`phase` 取值合法、`updated` 格式正确）；提醒未填占位符与停滞任务（`STALE_DAYS` 可调，默认 30）。
 
 脚本仅负责确定性动作（建目录、查缺失），不要用提示词替代它们，也不要让 Agent 手工重复这些步骤。
