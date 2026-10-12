@@ -64,15 +64,15 @@ done
 place AGENTS.md AGENTS.md
 place README.md README.md
 
-# 若有 .gitignore 且尚未忽略原始日志，则补上
+# 忽略任务临时产物；.gitignore 不存在则创建（>> 会自动创建）
 gi="$ROOT/.gitignore"
-if [ -f "$gi" ] && ! grep -q "coding-agent-workflow" "$gi" 2>/dev/null; then
+if grep -q "coding-agent-workflow" "$gi" 2>/dev/null; then
+  : # 已经写过，不重复追加
+else
   {
     echo ""
-    echo "# coding-agent-workflow：原始日志与临时文件不入库"
+    echo "# coding-agent-workflow：任务临时产物不入库（可整目录删除）"
     echo "work/active/*/scratch/"
-    echo "*.log"
-    echo "*.tmp"
   } >> "$gi"
   echo "更新: .gitignore"
 fi

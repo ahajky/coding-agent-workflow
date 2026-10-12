@@ -66,16 +66,29 @@ metadata:
 - [references/artifact-policy.md](references/artifact-policy.md)：A/B/C 三级保留策略、决策记录与过程记录的区分。
 - [references/handoff-protocol.md](references/handoff-protocol.md)：任务状态定义、`handoff.md` front-matter 与结构、恢复顺序、并发约定。
 
-## 模板（复制到任务目录后填写）
+## 模板
 
-- [templates/task-brief.md](templates/task-brief.md)：任务简报。
-- [templates/analysis.md](templates/analysis.md)：调研与方案比较。
-- [templates/plan.md](templates/plan.md)：实施计划与验收标准。
-- [templates/validation.md](templates/validation.md)：验证结果。
-- [templates/handoff.md](templates/handoff.md)：交接状态。
-- [templates/adr.md](templates/adr.md)：长期架构决策记录。
+全部模板位于本技能的 `templates/` 下，按**产物落点**分三类：
+
+**项目级**（`init-project.sh` 自动放到项目根）
+
+- `templates/AGENTS.md` → `AGENTS.md`（协议常驻锚点）
+- `templates/README.md` → `README.md`（面向人类的总览）
+
+**任务级**（落在 `work/active/<任务>/`）
+
+- 自动（`init-task.sh`）：`handoff.md`、`brief.md`、`plan.md`、`validation.md`
+- 手工复制：`analysis.md`（调研与方案比较，只在需要时）
+
+**长期知识**（手工复制到 `docs/decisions/`）
+
+- `templates/adr.md` → `ADR-NNN-<标题>.md`（重命名并编号）
+
+> 通则：**模板名 = 产物名**。唯一例外是 ADR，因为它需要编号。
 
 ## 脚本（确定性操作）
+
+以下脚本位于**本技能的 `scripts/`**（注意与项目自己的 `scripts/` 区分）：
 
 - `scripts/init-project.sh [项目根] [--name 项目名]`：为一个项目生成 `AGENTS.md`、`README.md` 与目录骨架（不覆盖已存在文件）。
 - `scripts/init-task.sh <任务目录> [--title 标题] [--minimal]`：按模板创建任务工作区并填好 `handoff` 的 front-matter（`--minimal` 只建 `handoff.md`）。

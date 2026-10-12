@@ -66,7 +66,7 @@ updated: 2026-10-10
 ## 恢复顺序
 
 1. 读 `AGENTS.md`，了解项目规则与导航。
-2. 读当前任务的 `handoff.md`。
+2. 读当前任务的 `handoff.md`；任务若已结束，读 `work/archive/<任务>/handoff.md`。
 3. 按 `References` 读必要的计划、需求、决策文档。
 4. 检查真实代码、测试结果与 Git 工作区差异，**核对文档是否落后于真实状态**。
 5. 从 `Next Actions` 的第一项继续。

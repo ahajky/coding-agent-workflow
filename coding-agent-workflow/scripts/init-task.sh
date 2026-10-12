@@ -59,7 +59,7 @@ render() {
 
 render handoff.md handoff.md
 if [ "$MINIMAL" -eq 0 ]; then
-  render task-brief.md brief.md
+  render brief.md brief.md
   render plan.md plan.md
   render validation.md validation.md
 fi

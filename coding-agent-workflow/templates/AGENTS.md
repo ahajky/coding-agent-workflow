@@ -46,6 +46,8 @@
 
 ## 任务路由
 
-- 修 Bug：先读 `docs/architecture/codebase-map.md` 和相关任务的 `handoff.md`。
-- 加功能：先读 `docs/product/requirements.md` 和 `docs/architecture/overview.md`。
+- 修 Bug：先读 `docs/architecture/` 下的架构与代码地图，以及相关任务的 `handoff.md`。
+- 加功能：先读 `docs/product/`（需求）和 `docs/architecture/`（架构）。
 - 重构 / 迁移：先读 `docs/decisions/`，确认既有约束再动手。
+
+具体文件名由本项目自行约定（常见写法见各子目录）；若某份文档尚未建立，先补它再动手。
