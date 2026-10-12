@@ -40,7 +40,7 @@ metadata:
 
 ### 2. 建立任务工作区
 
-按复杂度决定产出哪些文档，不要套用全套模板。任务目录命名与最小文件集见 `references/file-conventions.md`；可用 `scripts/init-task.sh` 初始化。
+默认只建 `handoff.md`。需要更完整的记录时，按 `references/file-conventions.md` 里"什么时候需要"的触发条件，从模板补齐对应文档。任务目录命名也见该文件；可用 `scripts/init-task.sh` 初始化。
 
 ### 3. 按阶段推进
 
@@ -77,8 +77,9 @@ metadata:
 
 **任务级**（落在 `work/active/<任务>/`）
 
-- 自动（`init-task.sh`）：`handoff.md`、`brief.md`、`plan.md`、`validation.md`
-- 手工复制：`analysis.md`（调研与方案比较，只在需要时）
+- 自动：`handoff.md`（`init-task.sh` 默认只建这一个）
+- 按需复制：`plan.md`、`validation.md`、`brief.md`、`analysis.md`，触发条件见 `references/file-conventions.md`
+- `init-task.sh --full` 可一次性建出 `handoff.md` + `brief.md` + `plan.md` + `validation.md`
 
 **长期知识**（手工复制到 `docs/decisions/`）
 
@@ -91,7 +92,7 @@ metadata:
 以下脚本位于**本技能的 `scripts/`**（注意与项目自己的 `scripts/` 区分）：
 
 - `scripts/init-project.sh [项目根] [--name 项目名]`：为一个项目生成 `AGENTS.md`、`README.md` 与目录骨架（不覆盖已存在文件）。
-- `scripts/init-task.sh <任务目录> [--title 标题] [--minimal]`：按模板创建任务工作区并填好 `handoff` 的 front-matter（`--minimal` 只建 `handoff.md`）。
+- `scripts/init-task.sh <任务目录> [--title 标题] [--full]`：创建任务工作区并填好 `handoff` 的 front-matter；默认只建 `handoff.md`，`--full` 追加 `brief.md`、`plan.md`、`validation.md`。
 - `scripts/check-project.sh [项目根]`：检查必需文件与 `AGENTS.md` 铁律；校验每个任务的 front-matter（`task` 与目录名一致、`status`/`phase` 取值合法、`updated` 格式正确）；提醒未填占位符与停滞任务（`STALE_DAYS` 可调，默认 30）。
 
 脚本仅负责确定性动作（建目录、查缺失），不要用提示词替代它们，也不要让 Agent 手工重复这些步骤。

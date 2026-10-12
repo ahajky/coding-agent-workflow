@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 初始化一个任务工作区（从 templates/ 复制模板）。
-# 用法: init-task.sh <任务目录> [--title 标题] [--minimal]
-#   --minimal  只创建 handoff.md（适用于很小改动）
+# 用法: init-task.sh <任务目录> [--title 标题] [--full]
+#   --full  除 handoff.md 外，再创建 brief.md / plan.md / validation.md
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -9,19 +9,19 @@ TEMPLATES_DIR="$SCRIPT_DIR/../templates"
 
 TASK_DIR=""
 TITLE=""
-MINIMAL=0
+FULL=0
 
 while [ $# -gt 0 ]; do
   case "$1" in
     -h|--help)
-      echo "用法: init-task.sh <任务目录> [--title 标题] [--minimal]"
+      echo "用法: init-task.sh <任务目录> [--title 标题] [--full]"
       exit 0
       ;;
     --title)
       TITLE="${2:-}"; shift 2
       ;;
-    --minimal)
-      MINIMAL=1; shift
+    --full)
+      FULL=1; shift
       ;;
     --*)
       echo "未知参数: $1" >&2; exit 2
@@ -33,7 +33,7 @@ while [ $# -gt 0 ]; do
 done
 
 if [ -z "$TASK_DIR" ]; then
-  echo "用法: init-task.sh <任务目录> [--title 标题] [--minimal]" >&2
+  echo "用法: init-task.sh <任务目录> [--title 标题] [--full]" >&2
   exit 2
 fi
 
@@ -58,7 +58,7 @@ render() {
 }
 
 render handoff.md handoff.md
-if [ "$MINIMAL" -eq 0 ]; then
+if [ "$FULL" -eq 1 ]; then
   render brief.md brief.md
   render plan.md plan.md
   render validation.md validation.md
