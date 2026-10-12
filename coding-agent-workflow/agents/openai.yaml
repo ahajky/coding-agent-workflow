@@ -1,0 +1,4 @@
+interface:
+  display_name: "编程 Agent 协作工作流"
+  short_description: "建立并维护人与编程 Agent 共用的项目文件与文档工作流"
+  default_prompt: "使用 $coding-agent-workflow 为这个项目建立文件与文档工作流，或恢复并推进当前任务。"

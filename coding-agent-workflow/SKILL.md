@@ -1,0 +1,80 @@
+---
+name: coding-agent-workflow
+description: 为软件项目建立并维护一套人与编程 Agent 共用的文件与文档工作流：识别项目类型、建立任务工作区、按阶段推进、保存有价值的中间产出、在中断后恢复状态并完成交接归档。用于接手已有项目、从零开始一个构思、或把现有项目的协作流程规范化。
+metadata:
+  short-description: 编程 Agent 协作工作流
+---
+
+# 编程 Agent 协作工作流
+
+## 目标
+
+让人与编程 Agent 的协作产物（需求、分析、设计、决策、计划、代码、验证）各有明确归属，并保证换了对话、换了 Agent、隔了几个月后，仍能从文件恢复状态。
+
+核心原则：
+
+- **文件是事实来源，对话只是临时工作界面。**
+- **同一份信息只有一个权威来源**（见 `references/file-conventions.md`）。
+- **只保留降低未来理解/决策/重复劳动成本的产出**（见 `references/artifact-policy.md`）。
+- **不因为规则而制造文档**：文件按需生成，简单任务可以只有代码和一份 `handoff.md`。
+
+## 何时触发
+
+- 用户要在已有项目上开始一项任务（修 Bug、加功能、重构、调研）。
+- 用户要从零开始一个构思或新项目。
+- 用户要把某个项目的文件/文档/协作流程规范化，或需要中断后恢复。
+
+不适用：一次性的独立脚本、与本项目文件无关的单点问答。
+
+## 执行流程
+
+### 1. 建立或恢复上下文
+
+先读项目入口（`AGENTS.md`，没有就参照 `references/file-conventions.md` 判断是否需要建立），再判断这是"新任务"还是"恢复已有任务"。
+
+- 若 `work/active/` 下已存在相关任务目录，**先读它的 `handoff.md`**，据此恢复，不要重新分析并覆盖已有成果。恢复顺序见 `references/handoff-protocol.md`。
+- 若是新任务，先判断项目状态：已有项目走"梳理现状"，全新项目走"澄清构思"。
+- 恢复时必须核对真实代码、测试结果与 Git 差异，不要盲信交接文档。
+
+### 2. 建立任务工作区
+
+按复杂度决定产出哪些文档，不要套用全套模板。任务目录命名与最小文件集见 `references/file-conventions.md`；可用 `scripts/init-task.sh` 初始化。
+
+### 3. 按阶段推进
+
+六阶段：发现 → 设计 → 计划 → 实施 → 验证 → 交接。各阶段的进入/退出条件和循环回退规则见 `references/workflow.md`。这是可循环流程，不是单向前进的流水线。
+
+### 4. 阶段切换时检查产出质量
+
+不要只检查"文件是否存在"，要检查内容：
+
+- 计划阶段结束：任务是否有明确的完成条件和验收标准。
+- 验证阶段结束：测试是**真实执行过**，还是仅由 Agent 声称通过。
+- 交接阶段结束：能否回答"完成了什么、改了哪些关键文件、跑了哪些验证、还有什么没解决、下一步做什么"。
+
+### 5. 交接与归档
+
+把长期有效的结论沉淀到 `docs/`，把任务结论与下一步写入 `handoff.md`，结束的任务移入 `work/archive/`。写入规则见 `references/handoff-protocol.md`。
+
+## 参考文件（按需加载）
+
+- [references/workflow.md](references/workflow.md)：六阶段详细流程、阶段门槛、循环回退。
+- [references/file-conventions.md](references/file-conventions.md)：目录树、各目录职责、信息权威来源、命名规则。
+- [references/artifact-policy.md](references/artifact-policy.md)：A/B/C 三级保留策略、决策记录与过程记录的区分。
+- [references/handoff-protocol.md](references/handoff-protocol.md)：任务状态定义、`handoff.md` 结构、恢复顺序。
+
+## 模板（复制到任务目录后填写）
+
+- [templates/task-brief.md](templates/task-brief.md)：任务简报。
+- [templates/analysis.md](templates/analysis.md)：调研与方案比较。
+- [templates/plan.md](templates/plan.md)：实施计划与验收标准。
+- [templates/validation.md](templates/validation.md)：验证结果。
+- [templates/handoff.md](templates/handoff.md)：交接状态。
+- [templates/adr.md](templates/adr.md)：长期架构决策记录。
+
+## 脚本（确定性操作）
+
+- `scripts/init-task.sh <任务目录> [--title 标题] [--minimal]`：按模板创建任务工作区（`--minimal` 只建 `handoff.md`）。
+- `scripts/check-project.sh [项目根]`：检查必需文件与任务目录完整性。
+
+脚本仅负责确定性动作（建目录、查缺失），不要用提示词替代它们，也不要让 Agent 手工重复这些步骤。
