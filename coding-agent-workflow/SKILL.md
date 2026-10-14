@@ -62,7 +62,7 @@ metadata:
 
 - [references/workflow.md](references/workflow.md)：六阶段详细流程、阶段门槛、循环回退。
 - [references/agents-md.md](references/agents-md.md)：`AGENTS.md` 常驻入口的四条铁律与嵌套约定。
-- [references/file-conventions.md](references/file-conventions.md)：目录树、各目录职责、信息权威来源、命名规则、规范外产物的处理。
+- [references/file-conventions.md](references/file-conventions.md)：目录树、各目录职责、信息权威来源、命名规则、规范外产物的处理、对外产出与外部输入。
 - [references/artifact-policy.md](references/artifact-policy.md)：A/B/C 三级保留策略、决策记录与过程记录的区分。
 - [references/handoff-protocol.md](references/handoff-protocol.md)：任务状态定义、`handoff.md` front-matter 与结构、恢复顺序、并发约定。
 

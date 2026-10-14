@@ -57,7 +57,7 @@ place() { # <模板名> <目标相对路径>
   created=$((created + 1))
 }
 
-for d in docs/product docs/architecture docs/decisions docs/guides work/active work/archive; do
+for d in docs/product docs/architecture docs/decisions docs/guides reports references work/active work/archive; do
   mkdir -p "$ROOT/$d"
 done
 
@@ -78,4 +78,4 @@ else
 fi
 
 echo "已创建 $created 个文件，跳过 $skipped 个已存在文件。"
-echo "目录骨架: docs/{product,architecture,decisions,guides}, work/{active,archive}"
+echo "目录骨架: docs/{product,architecture,decisions,guides}, reports/, references/, work/{active,archive}"

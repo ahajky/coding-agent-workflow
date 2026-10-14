@@ -25,6 +25,8 @@
 | `docs/architecture/` | 当前有效架构、代码地图 |
 | `docs/decisions/` | 重要技术决策（ADR） |
 | `docs/guides/` | 开发约定、上手文档 |
+| `reports/` | 对外交付的成品（汇报、方案书、演示材料） |
+| `references/` | 外部参考资料（只读，不改写原文） |
 | `work/active/<任务>/` | 当前任务工作区（含 handoff.md） |
 | `work/archive/` | 已结束任务 |
 
