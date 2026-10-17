@@ -4,6 +4,7 @@ status: planned
 phase: discover
 owner: <负责人：人 或 agent>
 updated: <YYYY-MM-DD HH:MM>
+branch: <分支名，如 feat/<任务目录名>；直接做在 main 上则写 main>
 ---
 
 # Task Handoff
@@ -13,6 +14,7 @@ updated: <YYYY-MM-DD HH:MM>
 > `status` 只允许：planned / in_progress / blocked / in_review / done / abandoned
 > `phase` 只允许：discover / design / plan / execute / verify / close
 > `updated` 每次收工都要改成当时的日期与时间（精确到分钟），供脚本判断先后与停滞。
+> `branch` 与任务目录名对应（`<type>/<任务目录名>`）；不用 Git 的项目写 `none`。
 
 ## Goal
 

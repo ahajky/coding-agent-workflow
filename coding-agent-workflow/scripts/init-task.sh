@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# 初始化一个任务工作区（从 templates/ 复制模板）。
-# 用法: init-task.sh <任务目录> [--title 标题]
+# 初始化一个任务工作区（从 templates/ 复制模板），可一并创建任务分支。
+# 用法: init-task.sh <任务目录> [--title 标题] [--branch <分支名|auto>]
 # 始终创建 brief.md、plan.md、handoff.md 三个必备文档。
 set -euo pipefail
 
@@ -9,15 +9,23 @@ TEMPLATES_DIR="$SCRIPT_DIR/../templates"
 
 TASK_DIR=""
 TITLE=""
+BRANCH=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
     -h|--help)
-      echo "用法: init-task.sh <任务目录> [--title 标题]"
+      echo "用法: init-task.sh <任务目录> [--title 标题] [--branch <分支名|auto>]"
       exit 0
       ;;
     --title)
       TITLE="${2:-}"; shift 2
+      ;;
+    --branch)
+      if [ -z "${2:-}" ]; then
+        echo "错误: --branch 需要一个值（分支名，或 auto 表示 <type>/<任务目录名>）" >&2
+        exit 2
+      fi
+      BRANCH="$2"; shift 2
       ;;
     --*)
       echo "未知参数: $1" >&2; exit 2
@@ -29,7 +37,7 @@ while [ $# -gt 0 ]; do
 done
 
 if [ -z "$TASK_DIR" ]; then
-  echo "用法: init-task.sh <任务目录> [--title 标题]" >&2
+  echo "用法: init-task.sh <任务目录> [--title 标题] [--branch <分支名|auto>]" >&2
   exit 2
 fi
 
@@ -61,13 +69,38 @@ render handoff.md handoff.md
 TASK_NAME="$(basename "$TASK_DIR")"
 NOW="$(date '+%Y-%m-%d %H:%M')"
 HANDOFF="$TASK_DIR/handoff.md"
-if [ -f "$HANDOFF" ]; then
+
+sed_inplace() { # <表达式> <文件>
   if sed --version >/dev/null 2>&1; then
-    sed -i "s|<任务目录名>|$TASK_NAME|g; s|<YYYY-MM-DD HH:MM>|$NOW|g" "$HANDOFF"
+    sed -i "$1" "$2"
   else
-    sed -i '' "s|<任务目录名>|$TASK_NAME|g; s|<YYYY-MM-DD HH:MM>|$NOW|g" "$HANDOFF"
+    sed -i '' "$1" "$2"
+  fi
+}
+
+if [ -f "$HANDOFF" ]; then
+  sed_inplace "s|<任务目录名>|$TASK_NAME|g; s|<YYYY-MM-DD HH:MM>|$NOW|g" "$HANDOFF"
+fi
+
+# 可选：一并创建任务分支（--branch <分支名|auto>）
+if [ -n "$BRANCH" ]; then
+  if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    echo "提醒: 不在 Git 仓库中，跳过建分支（handoff 的 branch 字段请填 none）" >&2
+  else
+    if [ "$BRANCH" = "auto" ]; then
+      BRANCH="feat/$TASK_NAME"
+    fi
+    if git show-ref --verify --quiet "refs/heads/$BRANCH"; then
+      echo "提醒: 分支 $BRANCH 已存在，直接切换" >&2
+      git switch "$BRANCH"
+    else
+      git switch -c "$BRANCH"
+    fi
+    sed_inplace "s|^branch: .*|branch: $BRANCH|" "$HANDOFF"
+    echo "已切换到分支: $BRANCH"
   fi
 fi
 
 echo "已创建任务工作区: $TASK_DIR"
 ls -1 "$TASK_DIR"
+echo "下一步: 填写 brief.md / plan.md，用 \"<type>($TASK_NAME): <说明>\" 提交"

@@ -46,6 +46,17 @@
 <命令>
 ```
 
+## Git 约定
+
+基准规则见 `coding-agent-workflow` 技能的 `references/git-workflow.md`。本项目必须遵守的只有这几条：
+
+- 一任务一分支：`<type>/<任务目录名>`；单文件小修与纯文档改动可直接提交 `main`。
+- 提交：`<type>(<任务目录名>): <说明>`，一个提交只做一件事；收工前把 `handoff.md` 一并提交。
+- 不改写已推送的历史（rebase / amend / force push），合并用 `merge`。
+- `work/active/<任务>/scratch/` 不入库；归档用 `git mv` 移到 `work/archive/` 并单独提交。
+
+本项目特有的补充约束（PR 流程、发布、评审等）写在本节下面，不要改基准。
+
 ## 任务路由
 
 - 修 Bug：先读 `docs/architecture/` 下的架构与代码地图，以及相关任务的 `handoff.md`。

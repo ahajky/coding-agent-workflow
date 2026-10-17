@@ -2,7 +2,7 @@
 
 > 一句话定位：这不是一个 Skill，而是一套「以文件系统为载体、以 Git 为版本历史、以编程 Agent 为执行者、以 Skill 为工作流入口」的协作协议。Skill 只是它的一个实现层。
 
-**当前版本：1.1.6**
+**当前版本：1.2.0**
 
 ## 版本号约定
 
@@ -24,6 +24,7 @@
 | 1.1.4 | 反转上一条的取舍：`brief.md` / `plan.md` / `handoff.md` 改为**每个任务都建**（内容可短），只有 `validation.md` / `analysis.md` 保留触发条件 |
 | 1.1.5 | 明确"规范外的产物怎么办"：目录树是默认约定而非白名单；新增目录要登记进 `AGENTS.md` 导航；区分长期材料与任务产物 |
 | 1.1.6 | 新增两个默认目录：`reports/`（对外交付物）与 `references/`（外部参考资料，只读）；补"谁写的、给谁看"的区分与入库建议 |
+| 1.2.0 | 新增 Git **最小基准**（`coding-agent-workflow/references/git-workflow.md`）：只保留任何项目都必须遵守的约束——入库范围与红线、一任务一分支、提交格式、不改写历史、归档提交。**项目特有的约束不写进基准**，改为在项目 `AGENTS.md` 的「Git 约定」里按场景扩展；PR 门禁、发布节奏、hotfix、`develop` 缓冲、评审制度均降为扩展清单（由团队《基于 Gitea 的多人协作研发流程规范》提炼，只取通用部分）。同时 `check-project.sh` 增加 Git 校验，`init-task.sh` 支持 `--branch`，新增可选的 `install-git-hooks.sh`。分支模型与提交格式仍取默认值，待人工确认 |
 
 ## 0. 它要解决的真实问题
 
@@ -129,6 +130,7 @@ my-project/
 | 任务的测试与验收结果 | `work/active/<任务>/validation.md` |
 | 当前进行到哪、下一步做什么 | 当前任务的 `handoff.md`（或明确指定的状态文件） |
 | 历史会话原文 | Agent 自身的会话记录系统（如有） |
+| 任务分支与提交历史 | Git（任务的 `handoff.md` 用 `branch` 字段指向它，约定见 `references/git-workflow.md`） |
 
 核心规则：
 
@@ -195,8 +197,10 @@ Skill 可以规定「怎么恢复」，但最好把状态设计成一个**明确
 ---
 task: 20261010-add-auth
 status: in_progress
+phase: execute
 owner: aha
-updated: 2026-10-10
+updated: 2026-10-10 21:40
+branch: feat/20261010-add-auth
 ---
 
 # Task Handoff
@@ -245,7 +249,7 @@ updated: 2026-10-10
 | Skill | 按需触发的工作流程 | 核心 |
 | 文档模板 | 规范化中间产出 | 核心 |
 | Shell / Python 脚本 | 初始化、检查、归档等确定性操作 | 按需增加 |
-| Git | 版本追踪、差异审查、历史恢复 | 核心 |
+| Git | 版本追踪、任务隔离（分支 / worktree）、差异审查、历史恢复 | 核心；具体约定见 `coding-agent-workflow/references/git-workflow.md` |
 | 独立 CLI 或插件 | 跨项目状态管理、复杂编排、多 Agent 协作 | 后期再考虑 |
 
 不同 Agent 对 Skill、规则文件和自动触发机制的支持不同，所以要把**通用工作流协议**与**具体工具的适配层**分开。这样从一种编程 Agent 换到另一种时，不需要推倒重来。
@@ -271,6 +275,10 @@ updated: 2026-10-10
 - [x] 生成 `AGENTS.md` 入口（常驻锚点）。
 - [x] 明确 `work/` 与 Git 的关系与任务编号规则。
 - [x] `handoff.md` 加 front-matter，脚本可校验。
+- [x] Git 最小基准成文：入库范围与红线、一任务一分支、提交格式、两条安全线、归档与校验。
+- [ ] **确认 1.2.0 的两处默认取值**：单文件小修是否允许直连 `main`；提交信息是否统一用 `<type>(<任务目录名>): <说明>`。
+- [x] 确定扩展机制：项目特有约束写进项目 `AGENTS.md` 的「Git 约定」或 `docs/guides/`，不改进基准。
+- [ ] 在真实项目上跑一次 `install-git-hooks.sh`，确认 `pre-commit` 的拦截不会变成噪音。
 - [ ] 把技能包装到 `$CODEX_HOME/skills`（或 `~/.codex/skills`），在 1 个真实项目上跑通"中断 → 恢复"。
 - [ ] 用 `check-project.sh` 的实际输出回头校准 front-matter 字段。
 - [ ] 优化该skill的token消耗
@@ -281,11 +289,12 @@ updated: 2026-10-10
 
 诚实列出来，避免把"设计完成"误当成"问题解决"：
 
-- **并发写仍靠约定。** front-matter 让冲突可见、可合并，但没有锁；两个 Agent 同时写同一 `handoff.md` 仍可能覆盖。
+- **并发写仍靠约定。** front-matter 让冲突可见、可合并，worktree 步骤已从"一句话"补成可操作流程，但仍没有锁；两个 Agent 同时写同一 `handoff.md` 仍可能覆盖。
 - **触发不可强制。** `AGENTS.md` 是软约束，Agent 仍可能不遵守；真正强制要靠 hooks 或 CI。
-- **场景未覆盖**：探索型 spike（"此路不通"也是结论）、紧急 hotfix 的轻量通道、长周期重构的里程碑、团队 review 与 ownership、跨项目全局层、协议自身的升级迁移，以及不用 Git 的项目。
+- **场景未覆盖**：探索型 spike（"此路不通"也是结论）、紧急 hotfix 的轻量通道、长周期重构的里程碑、团队 review 与 ownership、跨项目全局层、协议自身的升级迁移，以及不用 Git 的项目（1.2.0 给了降级路径，但未在真实项目验证）。
 - **文档与代码的一致性**仍靠"恢复时核对"被动发现，没有主动校验。
-- **检查是本地、可选的**，没有 CI 集成，不跑就等于没有。
+- **Git 基准故意不含远程与发布规则。** 它们依赖平台、团队与发版节奏，写进基准会变成负担；项目若不自行扩展，这层就只有本地约定。
+- **检查是本地、可选的**：`pre-commit` 钩子要手工装（`scripts/install-git-hooks.sh`），没有 CI 集成，不装不跑就等于没有。
 
 ---
 

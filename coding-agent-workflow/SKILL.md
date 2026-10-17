@@ -42,6 +42,8 @@ metadata:
 
 `init-task.sh` 会建出 `brief.md`、`plan.md`、`handoff.md` 三个必备文档——**简单任务写短一点即可，不要为了凑格式而灌水**。`validation.md`、`analysis.md` 等按 `references/file-conventions.md` 的触发条件再补。任务目录命名也见该文件。
 
+多文件改动、重构、需要验证的功能用 `init-task.sh --branch auto` 一并开分支，并把分支名写进 `handoff.md` 的 `branch` 字段；单文件小修与纯文档改动可以直接做在 `main` 上。分支、提交与 worktree 约定见 `references/git-workflow.md`。
+
 ### 3. 按阶段推进
 
 六阶段：发现 → 设计 → 计划 → 实施 → 验证 → 交接。各阶段的进入/退出条件和循环回退规则见 `references/workflow.md`。这是可循环流程，不是单向前进的流水线。
@@ -56,7 +58,7 @@ metadata:
 
 ### 5. 交接与归档
 
-把长期有效的结论沉淀到 `docs/`，把任务结论与下一步写入 `handoff.md`（含 `status`/`phase`/`updated` 的 front-matter），结束的任务移入 `work/archive/`。写入规则见 `references/handoff-protocol.md`。
+把长期有效的结论沉淀到 `docs/`，把任务结论与下一步写入 `handoff.md`（含 `status`/`phase`/`updated` 的 front-matter），结束的任务用 `git mv` 移入 `work/archive/` 并单独提交一次归档。写入规则见 `references/handoff-protocol.md`，归档与分支回收见 `references/git-workflow.md`。
 
 ## 参考文件（按需加载）
 
@@ -65,6 +67,7 @@ metadata:
 - [references/file-conventions.md](references/file-conventions.md)：目录树、各目录职责、信息权威来源、命名规则、规范外产物的处理、对外产出与外部输入。
 - [references/artifact-policy.md](references/artifact-policy.md)：A/B/C 三级保留策略、决策记录与过程记录的区分。
 - [references/handoff-protocol.md](references/handoff-protocol.md)：任务状态定义、`handoff.md` front-matter 与结构、恢复顺序、并发约定。
+- [references/git-workflow.md](references/git-workflow.md)：最小 Git 基准（入库范围、分支、提交、两条安全线、归档、校验），以及"项目自己的约束往哪扩展"。
 
 ## 模板
 
@@ -91,7 +94,8 @@ metadata:
 以下脚本位于**本技能的 `scripts/`**（注意与项目自己的 `scripts/` 区分）：
 
 - `scripts/init-project.sh [项目根] [--name 项目名]`：为一个项目生成 `AGENTS.md`、`README.md` 与目录骨架（不覆盖已存在文件）。
-- `scripts/init-task.sh <任务目录> [--title 标题]`：创建任务工作区（`brief.md`、`plan.md`、`handoff.md`）并填好 `handoff` 的 front-matter。
-- `scripts/check-project.sh [项目根]`：检查必需文件与 `AGENTS.md` 铁律；校验每个任务的 front-matter（`task` 与目录名一致、`status`/`phase` 取值合法、`updated` 格式正确）；提醒未填占位符与停滞任务（`STALE_DAYS` 可调，默认 30）。
+- `scripts/init-task.sh <任务目录> [--title 标题] [--branch <分支名|auto>]`：创建任务工作区（`brief.md`、`plan.md`、`handoff.md`）并填好 `handoff` 的 front-matter；`--branch` 会一并创建任务分支并写入 `branch` 字段。
+- `scripts/check-project.sh [项目根]`：检查必需文件与 `AGENTS.md` 铁律；校验每个任务的 front-matter（`task` 与目录名一致、`status`/`phase` 取值合法、`updated` 格式正确、`branch` 指向的分支是否存在）；检查 Git 约定（`.gitignore` 是否覆盖 `scratch/`、提交信息格式、`handoff.md` 是否仍未提交）；提醒未填占位符与停滞任务（`STALE_DAYS` 可调，默认 30）。
+- `scripts/install-git-hooks.sh [项目根]`：安装（可选的）`pre-commit` 钩子，提交前自动跑 `check-project.sh`。
 
 脚本仅负责确定性动作（建目录、查缺失），不要用提示词替代它们，也不要让 Agent 手工重复这些步骤。

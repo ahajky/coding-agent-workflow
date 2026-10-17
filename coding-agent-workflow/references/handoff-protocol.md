@@ -22,9 +22,9 @@
 | `phase` | 是 | 当前阶段：`discover` / `design` / `plan` / `execute` / `verify` / `close` |
 | `owner` | 是 | 当前负责人（人或 agent） |
 | `updated` | 是 | 最后更新时刻 `YYYY-MM-DD HH:MM`；精确到分钟，并发合并才能判先后 |
-| `branch` | 否 | 关联分支 / worktree，便于并行协作 |
+| `branch` | 条件 | 关联分支名，格式 `<type>/<任务目录名>`。开了分支就必填；直接做在 `main` 上的小修写 `main`；不用 Git 的项目写 `none` |
 
-`status`、`phase`、`updated` 是脚本的检查锚点，其余正文允许自由书写。
+`status`、`phase`、`updated` 是脚本的检查锚点；`branch` 会被校验"分支是否还存在"。其余正文允许自由书写。
 
 ### `status` 与 `phase` 的分工
 
@@ -41,6 +41,7 @@ status: in_progress
 phase: execute
 owner: aha
 updated: 2026-10-10 21:40
+branch: feat/20261010-add-auth
 ---
 
 ## Goal
@@ -96,7 +97,7 @@ updated: 2026-10-10 21:40
 front-matter 让冲突**可见**，但不解决覆盖。约定：
 
 - **同一任务同一时间只允许一个写者**（一个人或一个 agent）。
-- 确需并行时，用**分支或 worktree 隔离**，各写各自的副本。
+- 确需并行时，用**一 Agent 一 worktree** 隔离，各写各自的副本。操作步骤见 [git-workflow.md](git-workflow.md)。
 - 合并前先比对双方 `updated`（精确到分钟）：以晚的一方为基线，逐条合并 `Completed` / `Next Actions`，不要整段覆盖。
 
 ## 归档
@@ -105,4 +106,5 @@ front-matter 让冲突**可见**，但不解决覆盖。约定：
 
 1. 把长期结论沉淀到 `docs/`。
 2. 修剪 `handoff.md`，只留对后人有用的事实（结论、关键文件、验证证据、遗留问题）。
-3. 将任务目录从 `work/active/` 移到 `work/archive/`。
+3. 用 `git mv` 把任务目录从 `work/active/` 移到 `work/archive/`，并作为一次独立提交（`chore(archive): <任务目录名>`）。
+4. 任务分支合并回 `main` 后删除。具体见 [git-workflow.md](git-workflow.md)。
