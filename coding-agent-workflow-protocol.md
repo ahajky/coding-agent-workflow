@@ -2,7 +2,7 @@
 
 > 一句话定位：这不是一个 Skill，而是一套「以文件系统为载体、以 Git 为版本历史、以编程 Agent 为执行者、以 Skill 为工作流入口」的协作协议。Skill 只是它的一个实现层。
 
-**当前版本：1.2.0**
+**当前版本：1.2.1**
 
 ## 版本号约定
 
@@ -24,7 +24,8 @@
 | 1.1.4 | 反转上一条的取舍：`brief.md` / `plan.md` / `handoff.md` 改为**每个任务都建**（内容可短），只有 `validation.md` / `analysis.md` 保留触发条件 |
 | 1.1.5 | 明确"规范外的产物怎么办"：目录树是默认约定而非白名单；新增目录要登记进 `AGENTS.md` 导航；区分长期材料与任务产物 |
 | 1.1.6 | 新增两个默认目录：`reports/`（对外交付物）与 `references/`（外部参考资料，只读）；补"谁写的、给谁看"的区分与入库建议 |
-| 1.2.0 | 新增 Git **最小基准**（`coding-agent-workflow/references/git-workflow.md`）：只保留任何项目都必须遵守的约束——入库范围与红线、一任务一分支、提交格式、不改写历史、归档提交。**项目特有的约束不写进基准**，改为在项目 `AGENTS.md` 的「Git 约定」里按场景扩展；PR 门禁、发布节奏、hotfix、`develop` 缓冲、评审制度均降为扩展清单（由团队《基于 Gitea 的多人协作研发流程规范》提炼，只取通用部分）。同时 `check-project.sh` 增加 Git 校验，`init-task.sh` 支持 `--branch`，新增可选的 `install-git-hooks.sh`。分支模型与提交格式仍取默认值，待人工确认 |
+| 1.2.0 | 新增 Git **最小基准**（`references/git-workflow.md`）：只保留任何项目都必须遵守的约束——入库范围与红线、一任务一分支、提交格式、不改写历史、归档提交。**项目特有的约束不写进基准**，改为在项目 `AGENTS.md` 的「Git 约定」里按场景扩展；PR 门禁、发布节奏、hotfix、`develop` 缓冲、评审制度均降为扩展清单（由团队《基于 Gitea 的多人协作研发流程规范》提炼，只取通用部分）。同时 `check-project.sh` 增加 Git 校验，`init-task.sh` 支持 `--branch`，新增可选的 `install-git-hooks.sh`。分支模型与提交格式仍取默认值，待人工确认 |
+| 1.2.1 | 仓库扁平化：技能包从 `coding-agent-workflow/` 子目录移到仓库根目录，克隆下来即可直接作为技能目录安装，不再出现嵌套；新增面向使用者的 `README.md`（定位、快速开始、目录导航），协议文档继续承担规范全文 |
 
 ## 0. 它要解决的真实问题
 
@@ -249,7 +250,7 @@ branch: feat/20261010-add-auth
 | Skill | 按需触发的工作流程 | 核心 |
 | 文档模板 | 规范化中间产出 | 核心 |
 | Shell / Python 脚本 | 初始化、检查、归档等确定性操作 | 按需增加 |
-| Git | 版本追踪、任务隔离（分支 / worktree）、差异审查、历史恢复 | 核心；具体约定见 `coding-agent-workflow/references/git-workflow.md` |
+| Git | 版本追踪、任务隔离（分支 / worktree）、差异审查、历史恢复 | 核心；具体约定见 `references/git-workflow.md` |
 | 独立 CLI 或插件 | 跨项目状态管理、复杂编排、多 Agent 协作 | 后期再考虑 |
 
 不同 Agent 对 Skill、规则文件和自动触发机制的支持不同，所以要把**通用工作流协议**与**具体工具的适配层**分开。这样从一种编程 Agent 换到另一种时，不需要推倒重来。
@@ -283,7 +284,7 @@ branch: feat/20261010-add-auth
 - [ ] 用 `check-project.sh` 的实际输出回头校准 front-matter 字段。
 - [ ] 优化该skill的token消耗
 
-配套技能包位于同目录的 `coding-agent-workflow/`，可直接安装使用。
+技能包（`SKILL.md`、`references/`、`templates/`、`scripts/`）与本协议同在一个仓库根目录，克隆后可直接安装使用，见 `README.md`。
 
 ## 10. 已知局限
 
