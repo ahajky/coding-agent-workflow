@@ -93,7 +93,7 @@ metadata:
 
 以下脚本位于**本技能的 `scripts/`**（注意与项目自己的 `scripts/` 区分）：
 
-- `scripts/init-project.sh [项目根] [--name 项目名]`：为一个项目生成 `AGENTS.md`、`README.md` 与目录骨架（不覆盖已存在文件）。
+- `scripts/init-project.sh [项目根] [--name 项目名] [--tasks-root 目录] [--docs-root 目录]`：为一个项目生成 `AGENTS.md`、`README.md` 与目录骨架（不覆盖已存在文件）。已有同名但非空的目录会先提示；两个 root 参数用于接入已有项目时换根，映射写进 `AGENTS.md` 的 front-matter。
 - `scripts/init-task.sh <任务目录> [--title 标题] [--branch <分支名|auto>]`：创建任务工作区（`brief.md`、`plan.md`、`handoff.md`）并填好 `handoff` 的 front-matter；`--branch` 会一并创建任务分支并写入 `branch` 字段。
 - `scripts/check-project.sh [项目根]`：检查必需文件与 `AGENTS.md` 铁律；校验每个任务的 front-matter（`task` 与目录名一致、`status`/`phase` 取值合法、`updated` 格式正确、`branch` 指向的分支是否存在）；检查 Git 约定（`.gitignore` 是否覆盖 `scratch/`、提交信息格式、`handoff.md` 是否仍未提交）；提醒未填占位符与停滞任务（`STALE_DAYS` 可调，默认 30）。
 - `scripts/install-git-hooks.sh [项目根]`：安装（可选的）`pre-commit` 钩子，提交前自动跑 `check-project.sh`。

@@ -28,6 +28,39 @@ my-project/
 
 > 注意：Git 不跟踪空目录。克隆一份项目时 `reports/`、`references/` 可能不存在，需要时创建即可，不算违规。
 
+## 接入已有项目：重名怎么办
+
+目录树是**默认布局**，不是硬性结构。已有项目往往已经有 `docs/`、`reports/`、`references/`、`work/` 这些通用名，含义却不一样——比如 `reports/` 是 CI 生成的覆盖率、`work/` 是构建缓存。
+
+先分清两类内容，处理方式不同：
+
+| 类别 | 例子 | 冲突时怎么做 |
+| --- | --- | --- |
+| **过程产物**（本工作流自产） | 任务工作区、`scratch/`、`archive/` | 必须独占一个根目录，默认 `work/`；撞名就整体换名，如 `agent-work/` |
+| **长期知识**（项目本来就有） | `docs/`、`reports/`、`references/` | 含义相同就直接复用，只补子目录；含义不同才换名，如 `docs/project/`、`deliverables/` |
+
+换名不是"另起一套"：`docs/project/product/` 仍然在项目的 `docs/` 树里，**不会出现两套文档**。
+
+```bash
+scripts/init-project.sh . --tasks-root agent-work --docs-root docs/project
+```
+
+脚本会把映射写进 `AGENTS.md` 顶部的 front-matter，检查脚本按它读取：
+
+```markdown
+---
+tasks_root: agent-work
+docs_root: docs/project
+---
+```
+
+几条约束：
+
+- **改路径就同时改映射与「目录导航」表**：脚本读 front-matter，人读导航表，两者不能只改一处。
+- **不要把所有内容塞进一个总文件夹**（如 `agent-workflow/docs/`、`agent-workflow/work/`）：那会和项目已有的 `docs/` 形成两套文档树，违背"同一份信息只有一个权威来源"；而且 `AGENTS.md` 必须留在根目录，这是工具约定，收不进去。
+- **`AGENTS.md` 已存在时脚本不覆盖**：把模板里的四条铁律、目录导航、Git 约定合并进去，再补 front-matter 映射。
+- `reports/`、`references/` 不由脚本接管：含义不同就在导航表里改名登记，不必改脚本。
+
 ## 规范外的产物怎么办
 
 目录树是**默认约定，不是白名单**——不禁止在项目里新增文件夹，脚本也不会因此报错（`check-project.sh` 只检查必需项是否存在，不枚举根目录去找"不该有的东西"）。

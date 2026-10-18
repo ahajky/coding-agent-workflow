@@ -68,9 +68,15 @@ if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   IS_GIT=yes
 fi
 
+# ---------- 路径映射（AGENTS.md front-matter，缺省用默认名） ----------
+TASKS_ROOT="$(fm_field AGENTS.md tasks_root)"
+DOCS_ROOT="$(fm_field AGENTS.md docs_root)"
+[ -n "$TASKS_ROOT" ] || TASKS_ROOT="work"
+[ -n "$DOCS_ROOT" ] || DOCS_ROOT="docs"
+
 # ---------- 1) 必需项 ----------
 missing=()
-for item in AGENTS.md docs work work/active; do
+for item in AGENTS.md "$DOCS_ROOT" "$TASKS_ROOT" "$TASKS_ROOT/active"; do
   [ -e "$item" ] || missing+=("$item")
 done
 if [ "${#missing[@]}" -gt 0 ]; then
@@ -161,9 +167,9 @@ check_task() { # <任务目录> <yes|no 是否检查停滞>
   done
 }
 
-if [ -d work/active ]; then
+if [ -d "$TASKS_ROOT/active" ]; then
   shopt -s nullglob
-  for d in work/active/*/; do
+  for d in "$TASKS_ROOT"/active/*/; do
     case "$(basename "$d")" in
       scratch) continue ;;
     esac
@@ -173,9 +179,9 @@ if [ -d work/active ]; then
 fi
 
 # ---------- 4) 归档任务 ----------
-if [ -d work/archive ]; then
+if [ -d "$TASKS_ROOT/archive" ]; then
   shopt -s nullglob
-  for d in work/archive/*/; do
+  for d in "$TASKS_ROOT"/archive/*/; do
     [ -f "${d}handoff.md" ] || problem "$d 缺少 handoff.md"
   done
   shopt -u nullglob
@@ -185,9 +191,9 @@ fi
 if [ "$IS_GIT" = yes ]; then
   gi=".gitignore"
   if [ ! -f "$gi" ]; then
-    problem "缺少 .gitignore —— 应包含 work/active/*/scratch/ 忽略规则（可用 init-project.sh 生成）"
-  elif ! grep -qE '^[[:space:]]*/?work/active/\*/scratch/?[[:space:]]*$' "$gi"; then
-    problem ".gitignore 未忽略 work/active/*/scratch/"
+    problem "缺少 .gitignore —— 应包含 $TASKS_ROOT/active/*/scratch/ 忽略规则（可用 init-project.sh 生成）"
+  elif ! grep -qE "^[[:space:]]*/?${TASKS_ROOT//./\\.}/active/\*/scratch/?[[:space:]]*\$" "$gi"; then
+    problem ".gitignore 未忽略 $TASKS_ROOT/active/*/scratch/"
   fi
 
   subject="$(git log -1 --pretty=%s 2>/dev/null || true)"

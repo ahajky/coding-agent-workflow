@@ -52,6 +52,15 @@ cd ~/code/my-project          # 需是 Git 仓库
 
 它会生成 `AGENTS.md`、`README.md` 与目录骨架（`docs/`、`work/`、`reports/`、`references/`），并往 `.gitignore` 加上 `scratch/` 规则；已存在的文件不覆盖。
 
+接入已有项目时，如果 `docs/`、`reports/`、`work/` 已经存在但用途不同，先换根再跑：
+
+```bash
+~/.codex/skills/coding-agent-workflow/scripts/init-project.sh . \
+  --tasks-root agent-work --docs-root docs/project
+```
+
+脚本会提示冲突并把映射写进 `AGENTS.md`。原则是**过程产物独占一个根，长期知识沿用项目已有结构**，不要把全部内容塞进一个总文件夹——那样会出现两套文档树。
+
 ### 3. 开一个任务
 
 ```bash
