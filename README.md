@@ -14,19 +14,20 @@
 - **状态可恢复**：新会话读文件就能接上，不必问"我们做到哪了"。
 - **流程可复用**：接手旧项目、从零开始，走同一套机制。
 
-三条判断贯穿全文：
+四条判断贯穿全文：
 
 1. **文件是事实来源，对话只是临时工作界面。**
-2. **同一份信息只有一个权威来源。**
-3. **只保留降低未来理解、决策、重复劳动成本的产出。**
+2. **个人工作记忆与团队文档分开**：工作流产出集中在一个目录，默认不进版本控制；要成为团队共识，先讨论再沉淀。
+3. **同一份信息只有一个权威来源。**
+4. **只保留降低未来理解、决策、重复劳动成本的产出。**
 
 ## 四条铁律
 
 写在每个项目的 `AGENTS.md` 里，连"小修"也不豁免：
 
-1. **开工先恢复上下文**：先看 `work/active/` 有没有相关任务，有就先读它的 `handoff.md`。
+1. **开工先恢复上下文**：先看 `.agent/work/active/` 有没有相关任务，有就先读它的 `handoff.md`。
 2. **收工必写回状态**：`status`、`Completed`、`Current State`、`Next Actions`、`updated`。
-3. **尊重信息归属**：长期结论进 `docs/`，任务过程留在 `work/active/<任务>/`。
+3. **尊重信息归属**：任务过程留在 `.agent/work/active/<任务>/`，我的理解进 `.agent/docs/`，不直接写进项目正式文档。
 4. **不写敏感信息**：密钥、凭证、内网地址、客户数据一律不入文档。
 
 ## 快速开始
@@ -50,22 +51,22 @@ cd ~/code/my-project          # 需是 Git 仓库
 ~/.codex/skills/coding-agent-workflow/scripts/init-project.sh . --name my-project
 ```
 
-它会生成 `AGENTS.md`、`README.md` 与目录骨架（`docs/`、`work/`、`reports/`、`references/`），并往 `.gitignore` 加上 `scratch/` 规则；已存在的文件不覆盖。
+它会生成 `AGENTS.md`、`README.md` 与工作流目录 `.agent/`（`docs/`、`work/`、`reports/`、`references/`），并把 `.agent/` 写进 `.gitignore`——**工作流的内容不进代码提交**；已存在的文件不覆盖。
 
-接入已有项目时，如果 `docs/`、`reports/`、`work/` 已经存在但用途不同，先换根再跑：
+想换个位置（比如不喜欢隐藏目录）用 `--workflow-root`：
 
 ```bash
 ~/.codex/skills/coding-agent-workflow/scripts/init-project.sh . \
-  --tasks-root agent-work --docs-root docs/project
+  --workflow-root agent-work
 ```
 
-脚本会提示冲突并把映射写进 `AGENTS.md`。原则是**过程产物独占一个根，长期知识沿用项目已有结构**，不要把全部内容塞进一个总文件夹——那样会出现两套文档树。
+映射会写进 `AGENTS.md` 的 front-matter，脚本都按它走。
 
 ### 3. 开一个任务
 
 ```bash
 ~/.codex/skills/coding-agent-workflow/scripts/init-task.sh \
-  work/active/20261016-add-auth --title "加登录" --branch auto
+  .agent/work/active/20261016-add-auth --title "加登录" --branch auto
 ```
 
 生成 `brief.md`、`plan.md`、`handoff.md`，并切出 `feat/20261016-add-auth` 分支。
@@ -96,7 +97,7 @@ cd ~/code/my-project          # 需是 Git 仓库
 ## 一个任务长什么样
 
 ```
-work/active/20261016-add-auth/
+.agent/work/active/20261016-add-auth/
 ├── brief.md       # 是什么、边界、明确不做的事
 ├── plan.md        # 怎么做、验收标准
 ├── handoff.md     # 现在到哪了、下一步做什么
@@ -106,6 +107,8 @@ work/active/20261016-add-auth/
 ```
 
 **目录是默认约定，不是白名单；文件按需生成。** 一个只改两行的任务，写一句 `handoff.md` 也算完整。
+
+`.agent/` 是**个人工作记忆**：不进代码提交，也不混进项目的 `docs/`。要让某个结论成为团队知识，先讨论，再搬进项目正式文档，并在原处留一条指针。判断标准只有一句：**别人要看、要维护 → 项目文档；只有我用 → `.agent/`。**
 
 ## 版本
 

@@ -14,6 +14,7 @@ metadata:
 核心原则：
 
 - **文件是事实来源，对话只是临时工作界面。**
+- **工作流产出集中在一个目录（默认 `.agent/`），只属于使用者本人**；进入团队仓库的内容要经过"沉淀"。
 - **同一份信息只有一个权威来源**（见 `references/file-conventions.md`）。
 - **只保留降低未来理解/决策/重复劳动成本的产出**（见 `references/artifact-policy.md`）。
 - **不因为规则而制造文档**：文件按需生成，简单任务可以只有代码和一份 `handoff.md`。
@@ -34,7 +35,7 @@ metadata:
 
 然后判断这是"新任务"还是"恢复已有任务"。
 
-- 若 `work/active/` 下已存在相关任务目录，**先读它的 `handoff.md`**，据此恢复，不要重新分析并覆盖已有成果。恢复顺序见 `references/handoff-protocol.md`。
+- 若 `.agent/work/active/` 下已存在相关任务目录，**先读它的 `handoff.md`**，据此恢复，不要重新分析并覆盖已有成果。恢复顺序见 `references/handoff-protocol.md`。
 - 若是新任务，先判断项目状态：已有项目走"梳理现状"，全新项目走"澄清构思"。
 - 恢复时必须核对真实代码、测试结果与 Git 差异，不要盲信交接文档。
 
@@ -58,13 +59,13 @@ metadata:
 
 ### 5. 交接与归档
 
-把长期有效的结论沉淀到 `docs/`，把任务结论与下一步写入 `handoff.md`（含 `status`/`phase`/`updated` 的 front-matter），结束的任务用 `git mv` 移入 `work/archive/` 并单独提交一次归档。写入规则见 `references/handoff-protocol.md`，归档与分支回收见 `references/git-workflow.md`。
+把长期有效的结论写进 `.agent/docs/`，把任务结论与下一步写入 `handoff.md`（含 `status`/`phase`/`updated` 的 front-matter），结束的任务移入 `.agent/work/archive/`。**只有当结论已经成为团队共识（经讨论）时，才沉淀到项目正式文档**，并在原处留指针。写入规则见 `references/handoff-protocol.md`，归档与分支回收见 `references/git-workflow.md`。
 
 ## 参考文件（按需加载）
 
 - [references/workflow.md](references/workflow.md)：六阶段详细流程、阶段门槛、循环回退。
 - [references/agents-md.md](references/agents-md.md)：`AGENTS.md` 常驻入口的四条铁律与嵌套约定。
-- [references/file-conventions.md](references/file-conventions.md)：目录树、各目录职责、信息权威来源、命名规则、规范外产物的处理、对外产出与外部输入。
+- [references/file-conventions.md](references/file-conventions.md)：工作流目录结构、为什么单独成目录、与项目文档的沉淀边界、各目录职责、信息权威来源、命名规则。
 - [references/artifact-policy.md](references/artifact-policy.md)：A/B/C 三级保留策略、决策记录与过程记录的区分。
 - [references/handoff-protocol.md](references/handoff-protocol.md)：任务状态定义、`handoff.md` front-matter 与结构、恢复顺序、并发约定。
 - [references/git-workflow.md](references/git-workflow.md)：最小 Git 基准（入库范围、分支、提交、两条安全线、归档、校验），以及"项目自己的约束往哪扩展"。
@@ -78,12 +79,12 @@ metadata:
 - `templates/AGENTS.md` → `AGENTS.md`（协议常驻锚点）
 - `templates/README.md` → `README.md`（面向人类的总览）
 
-**任务级**（落在 `work/active/<任务>/`）
+**任务级**（落在 `.agent/work/active/<任务>/`）
 
 - 自动（`init-task.sh`）：`brief.md`、`plan.md`、`handoff.md`
 - 按需复制：`validation.md`、`analysis.md`，触发条件见 `references/file-conventions.md`
 
-**长期知识**（手工复制到 `docs/decisions/`）
+**长期知识**（手工复制到 `.agent/docs/decisions/`）
 
 - `templates/adr.md` → `ADR-NNN-<标题>.md`（重命名并编号）
 
@@ -93,9 +94,9 @@ metadata:
 
 以下脚本位于**本技能的 `scripts/`**（注意与项目自己的 `scripts/` 区分）：
 
-- `scripts/init-project.sh [项目根] [--name 项目名] [--tasks-root 目录] [--docs-root 目录]`：为一个项目生成 `AGENTS.md`、`README.md` 与目录骨架（不覆盖已存在文件）。已有同名但非空的目录会先提示；两个 root 参数用于接入已有项目时换根，映射写进 `AGENTS.md` 的 front-matter。
+- `scripts/init-project.sh [项目根] [--name 项目名] [--workflow-root 目录]`：生成 `AGENTS.md`、`README.md` 与工作流目录（默认 `.agent/`，不覆盖已存在文件），并把该目录写进 `.gitignore`；路径映射写进 `AGENTS.md` 的 front-matter。
 - `scripts/init-task.sh <任务目录> [--title 标题] [--branch <分支名|auto>]`：创建任务工作区（`brief.md`、`plan.md`、`handoff.md`）并填好 `handoff` 的 front-matter；`--branch` 会一并创建任务分支并写入 `branch` 字段。
-- `scripts/check-project.sh [项目根]`：检查必需文件与 `AGENTS.md` 铁律；校验每个任务的 front-matter（`task` 与目录名一致、`status`/`phase` 取值合法、`updated` 格式正确、`branch` 指向的分支是否存在）；检查 Git 约定（`.gitignore` 是否覆盖 `scratch/`、提交信息格式、`handoff.md` 是否仍未提交）；提醒未填占位符与停滞任务（`STALE_DAYS` 可调，默认 30）。
+- `scripts/check-project.sh [项目根]`：按 `workflow_root` 检查工作流目录与任务；校验每个任务的 front-matter（`task` 与目录名一致、`status`/`phase` 取值合法、`updated` 格式正确、`branch` 指向的代码分支是否存在）；检查 Git 约定（工作流目录是否被忽略、提交信息格式）；提醒未填占位符与停滞任务（`STALE_DAYS` 可调，默认 30）。
 - `scripts/install-git-hooks.sh [项目根]`：安装（可选的）`pre-commit` 钩子，提交前自动跑 `check-project.sh`。
 
 脚本仅负责确定性动作（建目录、查缺失），不要用提示词替代它们，也不要让 Agent 手工重复这些步骤。

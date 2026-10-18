@@ -9,12 +9,11 @@
 
 | 内容 | 进 Git | 说明 |
 | --- | --- | --- |
-| `docs/` | 是 | 长期知识，是恢复状态的主要依据 |
-| `work/active/<任务>/` 的文档 | 是 | `brief.md` / `analysis.md` / `plan.md` / `validation.md` / `handoff.md` |
-| `work/active/<任务>/scratch/` | 否 | 整目录 gitignore，随时可删 |
-| `work/archive/<任务>/` | 是 | 归档本身就是一次提交 |
-| `reports/` `references/` `src/` `tests/` `scripts/` | 是 | 大体积、二进制、含真实数据的走 gitignore，并在原地注明去向 |
+| 代码与项目正式文档 | 是 | `src/`、`tests/`、`scripts/`、项目自己的 `docs/` |
+| `AGENTS.md` | 是 | 只写规则，不含个人笔记；团队共用这套规则时需要它 |
+| 工作流目录 `.agent/`（`docs/` `work/` `reports/` `references/`） | 否 | 个人工作记忆，默认 gitignore；任务对应哪个分支写在 `handoff.md` 的 `branch` 字段 |
 
+- **代码提交里不出现工作流的内容。** 提交只回答"代码为什么变成这样"，不承担保存个人笔记的职责；团队 Review 时也不该被这些文件干扰。
 - **不要在仓库级忽略 `*.log` / `*.tmp`**：会误伤需要跟踪的日志样本与测试夹具。
 - **密钥、凭证、客户数据不入库。** 进了历史就等于泄露——删文件、回滚提交都不解除风险，必须轮换。
 
@@ -35,7 +34,7 @@ git worktree add ../<项目名>-<任务目录名> -b feat/<任务目录名>
 - **小步提交**：一次可独立验证的改动一个提交，一个提交只做一件事。
 - 格式：`<type>(<任务目录名>): <说明>`。`type` 默认取 `feat` / `fix` / `refactor` / `docs` / `test` / `chore` / `perf`。
 - 直接做在 `main` 上的小修，括号里换成模块名（`fix(auth): ...`）。
-- **`handoff.md` 随本次工作的提交一起带上**，不要收工后留在工作区。
+- `handoff.md` 不提交——它属于工作流目录。收工时更新它，与代码提交分开进行。
 
 ## 4. 两条安全线
 
@@ -44,12 +43,13 @@ git worktree add ../<项目名>-<任务目录名> -b feat/<任务目录名>
 
 ## 5. 归档
 
+工作流目录不在 Git 里，归档只是一次移动：
+
 ```bash
-git mv work/active/<任务> work/archive/<任务>
-git commit -m "chore(archive): <任务目录名>"
+mv .agent/work/active/<任务> .agent/work/archive/<任务>
 ```
 
-单独提交，让"任务结束"在历史里可查；合并、归档完成后删分支。
+不需要提交。任务对应的代码分支合并回 `main` 后删除，这一步仍然在代码仓库里做。
 
 ## 6. 项目自己的扩展
 
@@ -75,9 +75,8 @@ git commit -m "chore(archive): <任务目录名>"
 | 检查项 | 谁做 |
 | --- | --- |
 | 是否在 Git 仓库里；不在则降级为"仅本地" | `check-project.sh` |
-| `.gitignore` 是否覆盖 `work/active/*/scratch/` | `check-project.sh` |
+| 工作流目录 `.agent/` 是否被 `.gitignore` 排除 | `check-project.sh`（只提醒） |
 | `handoff.md` 的 `branch` 是否指向存在的分支 | `check-project.sh` |
-| `handoff.md` 是否有未提交的改动（收工没提交） | `check-project.sh` |
 | 最近一次提交的信息格式 | `check-project.sh`（只提醒） |
 | 提交前自动跑以上检查 | 可选：`scripts/install-git-hooks.sh` |
 

@@ -22,7 +22,7 @@
 | `phase` | 是 | 当前阶段：`discover` / `design` / `plan` / `execute` / `verify` / `close` |
 | `owner` | 是 | 当前负责人（人或 agent） |
 | `updated` | 是 | 最后更新时刻 `YYYY-MM-DD HH:MM`；精确到分钟，并发合并才能判先后 |
-| `branch` | 条件 | 关联分支名，格式 `<type>/<任务目录名>`。开了分支就必填；直接做在 `main` 上的小修写 `main`；不用 Git 的项目写 `none` |
+| `branch` | 条件 | 任务对应的**代码分支**，格式 `<type>/<任务目录名>`。工作流目录不在 Git 里，这个字段是任务与代码之间的唯一线索：开了分支就必填，直接做在 `main` 上的小修写 `main`，不用 Git 的项目写 `none` |
 
 `status`、`phase`、`updated` 是脚本的检查锚点；`branch` 会被校验"分支是否还存在"。其余正文允许自由书写。
 
@@ -75,7 +75,7 @@ branch: feat/20261010-add-auth
 ## 恢复顺序
 
 1. 读 `AGENTS.md`，了解项目规则与导航。
-2. 读当前任务的 `handoff.md`；任务若已结束，读 `work/archive/<任务>/handoff.md`。
+2. 读当前任务的 `handoff.md`；任务若已结束，读 `.agent/work/archive/<任务>/handoff.md`。
 3. 按 `References` 读必要的计划、需求、决策文档。
 4. 检查真实代码、测试结果与 Git 工作区差异，**核对文档是否落后于真实状态**。
 5. 从 `Next Actions` 的第一项继续。
@@ -90,7 +90,7 @@ branch: feat/20261010-add-auth
 
 ## 长度约束
 
-`handoff.md` 是恢复入口，不是报告。**正文目标控制在一屏以内**。一旦超了，说明细节该挪走：实施细节 → `plan.md`、方案权衡 → `analysis.md`、长期结论 → `docs/`、原始输出 → 不入库（或 `scratch/`，已被 gitignore）。
+`handoff.md` 是恢复入口，不是报告。**正文目标控制在一屏以内**。一旦超了，说明细节该挪走：实施细节 → `plan.md`、方案权衡 → `analysis.md`、长期结论 → `.agent/docs/`、原始输出 → `scratch/`（工作流目录整体不入库，可随时删）。
 
 ## 并发写入
 
@@ -104,7 +104,7 @@ front-matter 让冲突**可见**，但不解决覆盖。约定：
 
 任务进入 `done` 或 `abandoned` 后：
 
-1. 把长期结论沉淀到 `docs/`。
+1. 把长期结论留在 `.agent/docs/`；已经成为团队共识的，搬到项目正式文档并在原处留指针。
 2. 修剪 `handoff.md`，只留对后人有用的事实（结论、关键文件、验证证据、遗留问题）。
-3. 用 `git mv` 把任务目录从 `work/active/` 移到 `work/archive/`，并作为一次独立提交（`chore(archive): <任务目录名>`）。
+3. 把任务目录从 `.agent/work/active/` 移到 `.agent/work/archive/`（普通 `mv`，工作流目录不在 Git 里）。
 4. 任务分支合并回 `main` 后删除。具体见 [git-workflow.md](git-workflow.md)。
