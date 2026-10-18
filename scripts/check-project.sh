@@ -98,6 +98,11 @@ check_task() { # <任务目录> <yes|no 是否检查停滞>
   name="$(basename "$d")"
   h="${d}handoff.md"
 
+  case "$name" in
+    [0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-*|[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9]-*) ;;
+    *) warn "$d 缺少日期前缀（约定 YYYYMMDD-短语），日后不好按时间排序与去重" ;;
+  esac
+
   if [ ! -f "$h" ]; then
     problem "$d 缺少 handoff.md"
     return 0

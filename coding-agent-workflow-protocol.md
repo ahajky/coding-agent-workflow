@@ -2,7 +2,7 @@
 
 > 一句话定位：这不是一个 Skill，而是一套「以文件系统为载体、以 Git 为版本历史、以编程 Agent 为执行者、以 Skill 为工作流入口」的协作协议。Skill 只是它的一个实现层。
 
-**当前版本：2.0.1**
+**当前版本：2.0.2**
 
 ## 版本号约定
 
@@ -29,6 +29,7 @@
 | 1.2.2 | 支持接入已有项目时的目录重名：`init-project.sh` 新增 `--tasks-root` / `--docs-root`，同名且非空的目录先提示而非静默复用，`AGENTS.md` 增加 front-matter 路径映射（`tasks_root` / `docs_root`），`check-project.sh` 按映射校验。文件规范补「重名怎么办」：过程产物独占一个根，长期知识沿用项目已有结构，不建总文件夹 |
 | 2.0.0 | **结构重做：工作流产出集中到单一目录。** 默认 `.agent/`（内含 `docs/`、`work/`、`reports/`、`references/`），整体写入 `.gitignore`——个人工作记忆不混进项目 `docs/`，也不进代码提交；新增「沉淀」规则：结论成为团队共识后才搬进项目文档，并在原处留指针。`--tasks-root` / `--docs-root` 合并为 `--workflow-root`；`check-project.sh` 按 `workflow_root` 校验并提醒目录是否被忽略；`handoff.md` 的 `branch` 字段成为任务与代码分支之间唯一的线索 |
 | 2.0.1 | 外部参考资料改为「工作副本 + 索引」：项目里散落的外部资料复制进 `.agent/references/`，`references/README.md` 记录名称、来源、导入时间、用途；新增 `scripts/import-reference.sh`。只拷用得上的部分，原件仍是权威，大体积或敏感材料只留指针 |
+| 2.0.2 | 任务目录日期兜底：`init-task.sh` 在目录名缺少 `YYYYMMDD-`（或排序用的 `YYYY-NNN-`）前缀时自动补当天日期并提示改名，`check-project.sh` 对缺日期前缀的任务目录发出提醒。此前这条规则只写在文档里，没有任何脚本执行 |
 
 ## 0. 它要解决的真实问题
 

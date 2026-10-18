@@ -129,6 +129,7 @@ scripts/import-reference.sh ../vendor-api-docs --note "第三方接口文档 v2.
 - 以**日期 + 短语**为主键，避免多个 Agent 并行时撞号。
 - 需要人工排序时可在前面加顺序号（`2026-001-add-auth`），但冲突时**以日期 + 短语为准**，不要求全局唯一。
 - 短语用小写英文、短横线分词，说明任务主题。
+- **日期由脚本兜底**：`init-task.sh .agent/work/active/add-auth` 会自动建成 `20261018-add-auth`，并提示改名了；已经带日期前缀则原样使用。`check-project.sh` 会对缺日期前缀的任务目录发出提醒。
 
 ## 规范外的产物怎么办
 

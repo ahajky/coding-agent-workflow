@@ -95,7 +95,7 @@ metadata:
 以下脚本位于**本技能的 `scripts/`**（注意与项目自己的 `scripts/` 区分）：
 
 - `scripts/init-project.sh [项目根] [--name 项目名] [--workflow-root 目录]`：生成 `AGENTS.md`、`README.md` 与工作流目录（默认 `.agent/`，不覆盖已存在文件），并把该目录写进 `.gitignore`；路径映射写进 `AGENTS.md` 的 front-matter。
-- `scripts/init-task.sh <任务目录> [--title 标题] [--branch <分支名|auto>]`：创建任务工作区（`brief.md`、`plan.md`、`handoff.md`）并填好 `handoff` 的 front-matter；`--branch` 会一并创建任务分支并写入 `branch` 字段。
+- `scripts/init-task.sh <任务目录> [--title 标题] [--branch <分支名|auto>]`：创建任务工作区（`brief.md`、`plan.md`、`handoff.md`）并填好 `handoff` 的 front-matter；目录名缺日期前缀时自动补当天日期；`--branch` 会一并创建任务分支并写入 `branch` 字段。
 - `scripts/check-project.sh [项目根]`：按 `workflow_root` 检查工作流目录与任务；校验每个任务的 front-matter（`task` 与目录名一致、`status`/`phase` 取值合法、`updated` 格式正确、`branch` 指向的代码分支是否存在）；检查 Git 约定（工作流目录是否被忽略、提交信息格式）；提醒未填占位符与停滞任务（`STALE_DAYS` 可调，默认 30）。
 - `scripts/install-git-hooks.sh [项目根]`：安装（可选的）`pre-commit` 钩子，提交前自动跑 `check-project.sh`。
 - `scripts/import-reference.sh <来源路径> [--name 名称] [--note 用途]`：把外部资料复制进 `references/`，并在 `references/README.md` 里登记来源、时间与用途（拷贝是工作副本，原件仍为权威）。

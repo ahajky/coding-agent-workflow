@@ -41,6 +41,20 @@ if [ -z "$TASK_DIR" ]; then
   exit 2
 fi
 
+# 目录名按约定带日期前缀：YYYYMMDD-短语（或排序用的 YYYY-NNN-短语）。
+# 只给了短语时自动补当天日期，保证任务目录与分支名始终可追溯。
+TASK_DIR="$(printf '%s' "$TASK_DIR" | sed 's:/*$::')"
+if [ -z "$TASK_DIR" ]; then
+  echo "错误: 任务目录不能为空" >&2
+  exit 2
+fi
+BASE="$(basename "$TASK_DIR")"
+if ! printf '%s' "$BASE" | grep -qE '^([0-9]{8}|[0-9]{4}-[0-9]{3})-'; then
+  DATED="$(date '+%Y%m%d')-$BASE"
+  TASK_DIR="$(dirname "$TASK_DIR")/$DATED"
+  echo "提醒: 任务目录缺少日期，已按约定改为: $TASK_DIR"
+fi
+
 if [ -e "$TASK_DIR" ]; then
   echo "错误: $TASK_DIR 已存在，不覆盖。" >&2
   exit 1
