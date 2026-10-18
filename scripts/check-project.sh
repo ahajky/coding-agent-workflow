@@ -195,6 +195,12 @@ else
   warn "不在 Git 仓库中：协议降级为「仅本地」，跨机器 / 跨 Agent 恢复与历史追溯都会失效"
 fi
 
+# ---------- 6) 外部资料索引 ----------
+refd="$WFR/references"
+if [ -d "$refd" ] && [ -n "$(ls -A "$refd" 2>/dev/null)" ] && [ ! -f "$refd/README.md" ]; then
+  warn "$refd 里有内容但没有 README.md 索引——记下来源、导入时间与用途，否则日后没人知道它从哪来"
+fi
+
 if [ "$status" -eq 0 ]; then
   if [ "$warnings" -gt 0 ]; then
     echo "检查通过（另有 $warnings 条提醒）。"

@@ -62,6 +62,15 @@ cd ~/code/my-project          # 需是 Git 仓库
 
 映射会写进 `AGENTS.md` 的 front-matter，脚本都按它走。
 
+项目里已有的外部资料（规范、接口文档、供应商材料），复制进工作流目录并登记来源：
+
+```bash
+~/.codex/skills/coding-agent-workflow/scripts/import-reference.sh \
+  ./references --name vendor-docs --note "第三方接口文档 v2.3"
+```
+
+拷进来的是**工作副本**：原件仍是权威，索引里记着来源与导入时间；用不上的部分不必拷。
+
 ### 3. 开一个任务
 
 ```bash

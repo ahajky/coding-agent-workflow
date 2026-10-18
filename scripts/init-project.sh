@@ -126,6 +126,7 @@ fi
 
 echo "已创建 $created 个文件，跳过 $skipped 个已存在文件。"
 echo "工作流目录: $WFR/{docs/{product,architecture,decisions,guides},work/{active,archive},reports,references}"
+echo "已有外部资料? 用 scripts/import-reference.sh <路径> --note \"用途\" 导入并登记来源。"
 if [ "$conflicts" -gt 0 ]; then
   echo "注意: $WFR 里已有内容，请确认没有覆盖别的用途。"
 fi

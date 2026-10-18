@@ -34,7 +34,7 @@ workflow_root: .agent
 | `docs/decisions/` | 我认可的决策与理由（ADR） |
 | `docs/guides/` | 我踩过的坑、可复用的操作步骤 |
 | `reports/` | 交付物草稿（定稿后再搬进项目正式位置） |
-| `references/` | 外部参考资料（只读，不改写原文） |
+| `references/` | 外部资料的**工作副本**（只读；来源与导入时间记在 `references/README.md`） |
 | `work/active/<任务>/` | 当前任务工作区（含 handoff.md） |
 | `work/archive/` | 已结束任务 |
 

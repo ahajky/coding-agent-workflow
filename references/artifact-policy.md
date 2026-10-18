@@ -23,6 +23,7 @@
 | --- | --- |
 | 长期结论（需求、架构、决策） | `.agent/docs/`；已成团队共识的沉淀到项目文档 |
 | 任务过程（简报、分析、计划、验证、交接） | `.agent/work/active/<任务>/` |
+| 外部参考资料 | `.agent/references/`（工作副本，来源记在 `references/README.md`；大体积或敏感材料只留指针） |
 | 可复用的自动化 | `scripts/` 或项目正式脚本目录 |
 | 正式测试 | `tests/` |
 | 临时草稿、验证脚本、日志 | `.agent/work/active/<任务>/scratch/`（任务归档时整体丢弃） |
