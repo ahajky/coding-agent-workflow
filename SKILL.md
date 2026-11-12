@@ -33,6 +33,9 @@ metadata:
 
 先读项目入口 `AGENTS.md`。它是协议的**常驻锚点**——Skill 可能不被触发，但 `AGENTS.md` 每次会话都会被读取，所以协议要靠它兜底。若项目里还没有 `AGENTS.md`，先用 `scripts/init-project.sh` 生成（规则见 `references/agents-md.md`），再继续。
 
+已有项目在开始工作前，运行本技能目录下的 `python3 scripts/update-project.py <项目根> --sync` 同步规则（Python 3.9+）。工具展示差异、保存回滚原件，只应用无冲突更新；同步当前项目工作流属于接入维护的一部分，无需为无冲突同步额外确认。退出码 2 表示通用章节存在本地修改，按 `references/upgrade-protocol.md` 合并，不整份覆盖 AGENTS。旧入口只有 tasks_root/docs_root 时，先运行 `migrate-project.py` 预览；个人文档须明确选择，未知归属不搬。检测失败不要声称已更新，也不要阻止不依赖升级的项目工作。本地从当前技能目录读取；远程先由用户更新技能仓库，再同步项目，不在任务开始时擅自 git pull。
+
+
 然后判断这是"新任务"还是"恢复已有任务"。
 
 - 若 `.agent/work/active/` 下已存在相关任务目录，**先读它的 `handoff.md`**，据此恢复，不要重新分析并覆盖已有成果。恢复顺序见 `references/handoff-protocol.md`。
@@ -67,6 +70,10 @@ metadata:
 
 ## 参考文件（按需加载）
 
+- [references/archive-and-migration.md](references/archive-and-migration.md)：历史查询、索引重建、1.x 布局迁移及个人文档选择。
+
+- [references/upgrade-protocol.md](references/upgrade-protocol.md)：已有项目版本检测、预览、冲突合并、备份与回滚。
+
 - [references/workflow.md](references/workflow.md)：六阶段详细流程、阶段门槛、循环回退。
 - [references/agents-md.md](references/agents-md.md)：`AGENTS.md` 常驻入口的四条铁律与嵌套约定。
 - [references/file-conventions.md](references/file-conventions.md)：工作流目录结构、为什么单独成目录、与项目文档的沉淀边界、各目录职责、信息权威来源、命名规则。
@@ -100,8 +107,11 @@ metadata:
 
 - `scripts/init-project.sh [项目根] [--name 项目名] [--workflow-root 目录]`：生成 `AGENTS.md`、`README.md` 与工作流目录（默认 `.agent/`，不覆盖已存在文件），并把 `AGENTS.md` 和工作流目录写入 `.gitignore`；路径映射写进 `AGENTS.md` 的 front-matter。
 - `scripts/init-task.sh <任务目录> [--title 标题] [--branch <分支名|auto>]`：创建任务工作区（`brief.md`、`plan.md`、`handoff.md`）并填好 `handoff` 的 front-matter；目录名缺日期前缀时自动补当天日期；`--branch` 会一并创建任务分支并写入 `branch` 字段。
-- `scripts/check-project.sh [项目根]`：按 `workflow_root` 检查工作流目录与任务；校验每个任务的 front-matter（`task` 与目录名一致、`status`/`phase` 取值合法、`updated` 格式正确、`branch` 指向的代码分支是否存在）；检查 Git 约定（工作流目录是否被忽略、提交信息格式）；提醒未填占位符与停滞任务（`STALE_DAYS` 可调，默认 30）。
-- `scripts/install-git-hooks.sh [项目根]`：安装（可选的）`pre-commit` 钩子，提交前自动跑 `check-project.sh`。
+- `scripts/check-project.sh [项目根]`：按 `workflow_root` 检查工作流目录与任务；校验每个任务的 front-matter（`task` 与目录名一致、`status`/`phase` 取值合法、`updated` 格式正确、`branch` 指向的代码分支是否存在）；检查 Git 跟踪约定，支持 `--strict` 把个人文件已入索引升级为错误；提交信息交给 commit-msg 检查；提醒未填占位符与停滞任务（`STALE_DAYS` 可调，默认 30）。
+- `scripts/archive-index.py [项目根] [--query 关键词] [--write] [--json]`：实时搜索归档正文与关联文档，可重建非权威索引。
+- `scripts/migrate-project.py [项目根] [--personal-doc 项目相对路径] [--apply]`：预览 1.x 任务与明确选定个人文档的迁移，保留正式文档。
+- `scripts/update-project.py [项目根] [--check | --apply | --restore 备份编号]`：检测或同步两节通用规则，默认只预览；保留项目配置与任务，冲突时不写入，应用前备份。
+- `scripts/install-git-hooks.sh [项目根]`：安装（可选的）`pre-commit` 与 `commit-msg` 钩子，分别严格检查索引/工作流及本次消息；不覆盖其他工具钩子。
 - `scripts/import-reference.sh <来源路径> [--name 名称] [--note 用途]`：把外部资料复制进 `references/`，并在 `references/README.md` 里登记来源、时间与用途（拷贝是工作副本，原件仍为权威）。
 
 脚本仅负责确定性动作（建目录、查缺失），不要用提示词替代它们，也不要让 Agent 手工重复这些步骤。

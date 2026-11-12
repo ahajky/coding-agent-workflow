@@ -26,6 +26,7 @@ workflow_root: .agent
 
 ## 文档写入前检查
 
+- 每次会话开始项目工作时，若 `coding-agent-workflow` 技能可用，先用该技能目录下的 `python3 scripts/update-project.py <项目根> --sync` 同步入口；工具会展示差异、保存回滚原件并仅应用无冲突的通用规则，有冲突先合并，禁止整份覆盖入口。没有技能或 Python 3.9+ 时沿用当前规则并说明未检测。
 - 用户明确指定路径、修改现有文档或要求正式文档时，遵循指定位置与项目约定；其余按以下默认归属写入。先查同主题原件，优先更新，避免复制维护。
 - 知识、机制、场景说明与 FAQ → `.agent/docs/guides/`；长期目标需求 → `docs/product/`；架构与代码地图 → `docs/architecture/`；长期决策 → `docs/decisions/`（后三者同样位于工作流根目录）。
 - 当前任务的调查、计划、评审、复盘、会议记录与验证证据 → `.agent/work/active/<任务>/`；临时可丢弃产物 → 该任务的 `scratch/`；需保留的证据放 `evidence/`。

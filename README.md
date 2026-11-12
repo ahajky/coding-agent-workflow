@@ -78,7 +78,7 @@ cd ~/code/my-project          # 需是 Git 仓库
   .agent/work/active/20261016-add-auth --title "加登录" --branch auto
 ```
 
-生成 `brief.md`、`plan.md`、`handoff.md`，并切出 `feat/20261016-add-auth` 分支。
+生成 `brief.md`、`plan.md`、`handoff.md`，并切出 `codex/20261016-add-auth` 分支。
 
 ### 4. 日常循环
 
@@ -131,4 +131,44 @@ cd ~/code/my-project          # 需是 Git 仓库
 
 知识讲解、机制解释、场景说明默认放 `.agent/docs/guides/`；任务调查与评审进任务目录，交付草稿进 reports，外部资料进 references。用户指定路径和已有正式文档位置优先。完整覆盖表、混合用途与附件规则见 [文件与目录规范](references/file-conventions.md#文档写入前的归属判断权威规则)。模板包含写入前与收工检查；脚本尚不自动判断语义归属。
 
-更新技能不会覆盖已接入项目的 `AGENTS.md`，已有项目需将新版模板的「文档写入前检查」及 guides 导航合并进去。
+更新技能不会自动覆盖已接入项目的 `AGENTS.md`；可通过下方升级工具预览并同步通用规则。
+
+## 已有项目升级
+
+本地技能目录若为软链接，升级技能文件后再次运行 `--sync` 即可；远程环境先在技能仓库执行 `git pull`，再对项目运行同步。同步不会自动拉取远程或覆盖旧入口。
+
+需要 Python 3.9+。先更新本技能，再对目标项目运行（脚本使用本技能目录中的文件）：
+
+```bash
+python3 ~/.codex/skills/coding-agent-workflow/scripts/update-project.py /path/to/project --sync
+```
+
+`--sync` 显示版本与差异，并在无冲突时备份后应用；冲突时不写入。版本记录在工作流目录的 `.workflow/state.json`。支持 2.x 的 `workflow_root` 布局，只接管通用铁律与文档写入检查；项目命令、导航、Git 约定及历史任务不自动改写。定制过的通用规则会报告冲突，旧版目录迁移需人工处理。新入口会在会话开始时检测更新，旧入口首次接入需主动运行工具或加载新版 Skill。
+
+应用时输出备份编号，可用 `--restore <编号>` 恢复；升级后文件又有修改时拒绝覆盖。完整说明见 [升级协议](references/upgrade-protocol.md)。
+
+开发验证：`python3 -m unittest discover -s scripts/tests -v`。
+
+## 检查与提交门禁
+
+```bash
+bash scripts/check-project.sh /path/to/project --strict
+bash scripts/install-git-hooks.sh /path/to/project
+```
+
+安装 pre-commit 与 commit-msg：分别校验工作流/本次索引与本次消息。个人目录被强制暂存也会阻止；团队共享 AGENTS 时显式配置 `workflow_shared_agents: true`。技能移动后重新安装钩子；失效工具路径不会静默放行。详见 [Git 基准](references/git-workflow.md#提交门禁的实际行为)。
+
+工具需要 Python 3.9+ 与 Bash；CI 配置在 Linux/macOS 运行语法检查和临时仓库集成测试。版本号沿用本协议自己的定义，不代表 SemVer 稳定性承诺；当前开发版本以 [VERSION](VERSION) 为准。
+
+
+## 归档与 1.x 迁移
+
+```bash
+python3 scripts/archive-index.py /path/to/project --query "关键词" --json
+python3 scripts/archive-index.py /path/to/project --write
+python3 scripts/migrate-project.py /path/to/project --personal-doc docs/guides --apply
+```
+
+归档查询实时读取 `work/archive`，索引只是可删除导航。1.x 迁移默认只搬有 `handoff.md` 的任务；旧 `docs_root` 中的个人内容必须用 `--personal-doc` 明确选择，项目正式文档与未选内容保留原位。先预览再 `--apply`，迁移会保留日志与校验，并报告正式文档中的可能入链。
+
+完整检索范围、迁移链接处理和失败恢复边界见 [归档检索与旧布局迁移](references/archive-and-migration.md)。跨机器整工作区备份/恢复目前暂缓，手动传递由使用者安排。

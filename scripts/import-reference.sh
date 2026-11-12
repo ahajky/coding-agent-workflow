@@ -4,6 +4,7 @@
 # 用法: import-reference.sh <来源路径> [--name 名称] [--note 用途] [--root 项目根]
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SRC=""
 NAME=""
 NOTE="—"
@@ -47,19 +48,16 @@ if [ ! -e "$SRC" ]; then
 fi
 
 # 从 AGENTS.md 读工作流根目录，缺省 .agent
-WFR=""
-if [ -f "$ROOT/AGENTS.md" ]; then
-  WFR="$(awk '
-    NR==1 && $0 ~ /^---[[:space:]]*$/ { infm=1; next }
-    infm && $0 ~ /^---[[:space:]]*$/ { exit }
-    infm && index($0, "workflow_root:")==1 { v=$0; sub(/^[^:]*:[[:space:]]*/, "", v); print v; exit }
-  ' "$ROOT/AGENTS.md")"
-fi
+WFR="$(python3 "$SCRIPT_DIR/workflow_io.py" field "$ROOT/AGENTS.md" workflow_root)"
 [ -n "$WFR" ] || WFR=".agent"
+python3 "$SCRIPT_DIR/workflow_io.py" path "$ROOT" "$WFR/references"
 
 REF_DIR="$ROOT/$WFR/references"
 [ -n "$NAME" ] || NAME="$(basename "$SRC")"
+python3 "$SCRIPT_DIR/workflow_io.py" name "$ROOT" "$NAME"
 DEST="$REF_DIR/$NAME"
+python3 "$SCRIPT_DIR/workflow_io.py" path "$ROOT" "$WFR/references/$NAME"
+if [ -L "$REF_DIR/README.md" ]; then echo "错误: 资料索引不能是符号链接" >&2; exit 2; fi
 
 if [ -e "$DEST" ]; then
   echo "错误: 目标已存在，不覆盖: $DEST" >&2

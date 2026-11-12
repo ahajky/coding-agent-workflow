@@ -42,3 +42,7 @@ Skill 是**按需加载**的，可能不被触发；`AGENTS.md` 在每个会话�
 ## 校验
 
 `scripts/check-project.sh` 会检查 `AGENTS.md` 是否存在，并粗查它是否提到了 `handoff`（提醒是否写了第 1、2 条铁律）。
+
+## 升级检测
+
+新入口的文档检查段包含会话开始时的升级检测；新项目初始化会登记规则版本与基线。已接入项目需先运行一次 `scripts/update-project.py` 预览，再以 `--apply` 接入，之后可随会话检测更新。尚未接入的旧入口不会凭空获得新指令，须由用户或已加载的新 Skill 触发首次升级。同步边界、状态目录与冲突处理见 [upgrade-protocol.md](upgrade-protocol.md)。

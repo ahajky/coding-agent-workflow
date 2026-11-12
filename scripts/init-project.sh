@@ -43,17 +43,8 @@ if [ ! -d "$ROOT" ]; then
   exit 2
 fi
 
-trim_slash() { # 去掉结尾的斜杠
-  local p="$1"
-  while [ "${p%/}" != "$p" ]; do p="${p%/}"; done
-  printf '%s' "$p"
-}
-
-WFR="$(trim_slash "$WFR")"
-if [ -z "$WFR" ] || [ "${WFR#/}" != "$WFR" ] || [ "$WFR" = "." ]; then
-  echo "错误: --workflow-root 必须是仓库内的相对路径（不能为空、不能是 .、不能以 / 开头）: ${WFR:-<空>}" >&2
-  exit 2
-fi
+WFR="${WFR%/}"
+python3 "$SCRIPT_DIR/workflow_io.py" path "$ROOT" "$WFR"
 
 created=0
 skipped=0
@@ -72,7 +63,7 @@ place() { # <模板名> <目标相对路径>
   fi
   mkdir -p "$(dirname "$out")"
   if [ -n "$NAME" ]; then
-    sed "s/<项目名>/$NAME/g" "$tpl" > "$out"
+    python3 -c 'import pathlib,sys; print(pathlib.Path(sys.argv[1]).read_text().replace("<项目名>",sys.argv[2]),end="")' "$tpl" "$NAME" > "$out"
   else
     cp "$tpl" "$out"
   fi
@@ -104,12 +95,12 @@ fi
 
 # 把工作流根目录写进 AGENTS.md：front-matter 给脚本读，正文路径给人读
 if [ "$agents_new" = yes ] && [ -f "$agents" ]; then
-  pattern="s|\.agent/|$WFR/|g; s|^workflow_root: .*|workflow_root: $WFR|"
-  if sed --version >/dev/null 2>&1; then
-    sed -i "$pattern" "$agents"
-  else
-    sed -i '' "$pattern" "$agents"
-  fi
+  python3 - "$agents" "$WFR" <<'PYCODE'
+from pathlib import Path
+import sys
+p=Path(sys.argv[1]); root=sys.argv[2]
+p.write_text(p.read_text().replace('.agent/',root+'/').replace('workflow_root: .agent','workflow_root: '+root))
+PYCODE
 fi
 
 # 个人工作流不进版本控制；.gitignore 不存在则创建（>> 会自动创建）
@@ -141,4 +132,15 @@ echo "工作流目录: $WFR/{docs/{product,architecture,decisions,guides},work/{
 echo "已有外部资料? 用 scripts/import-reference.sh <路径> --note \"用途\" 导入并登记来源。"
 if [ "$conflicts" -gt 0 ]; then
   echo "注意: $WFR 里已有内容，请确认没有覆盖别的用途。"
+fi
+
+# 只给本次新建的入口登记升级基线；已有入口由升级工具预览、合并。
+if [ "$agents_new" = yes ]; then
+  if command -v python3 >/dev/null 2>&1; then
+    python3 "$SCRIPT_DIR/update-project.py" "$ROOT" --apply
+  else
+    echo "提醒: 未找到 Python 3，暂未登记版本；安装后运行 scripts/update-project.py 预览。"
+  fi
+else
+  echo "已有入口升级: python3 $SCRIPT_DIR/update-project.py \"$ROOT\"（默认仅预览）"
 fi

@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 # 检查项目的协作工作流文件是否齐备，校验任务 handoff 的 front-matter，并检查 Git 约定。
-# 用法: check-project.sh [项目根目录]
+# 用法: check-project.sh [项目根目录] [--strict]
 # 环境变量: STALE_DAYS（默认 30）——超过多少天未更新视为停滞
 # 退出码: 0 = 通过, 1 = 有问题
 set -uo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${1:-.}"
+STRICT=no
+if [ "${2:-}" = --strict ]; then STRICT=yes; elif [ -n "${2:-}" ]; then echo "未知参数: $2" >&2; exit 2; fi
 if [ ! -d "$ROOT" ]; then
   echo "错误: 目录不存在: $ROOT" >&2
   exit 2
@@ -38,18 +41,22 @@ in_list() { # <值> <空格分隔的取值列表>
 
 # 取 front-matter 字段值
 fm_field() {
-  awk -v f="$2" '
-    NR==1 && $0 ~ /^---[[:space:]]*$/ { infm=1; next }
-    infm && $0 ~ /^---[[:space:]]*$/ { exit }
-    infm && index($0, f ":")==1 { v=$0; sub(/^[^:]*:[[:space:]]*/, "", v); print v; exit }
-  ' "$1"
+  python3 "$SCRIPT_DIR/workflow_io.py" field "$1" "$2"
 }
 
 # 接受 "YYYY-MM-DD HH:MM" 与 "YYYY-MM-DD"
 to_epoch() {
-  date -j -f "%Y-%m-%d %H:%M" "$1" +%s 2>/dev/null \
-    || date -j -f "%Y-%m-%d" "$1" +%s 2>/dev/null \
-    || date -d "$1" +%s 2>/dev/null
+  python3 - "$1" <<'PYCODE'
+from datetime import datetime
+import sys
+for fmt in ('%Y-%m-%d %H:%M', '%Y-%m-%d'):
+    try:
+        print(int(datetime.strptime(sys.argv[1], fmt).timestamp())); break
+    except ValueError:
+        pass
+else:
+    sys.exit(1)
+PYCODE
 }
 
 # 检测"整行就是占位符"的行（可带列表前缀），按文件汇总
@@ -69,8 +76,9 @@ if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
 fi
 
 # ---------- 路径映射（AGENTS.md front-matter，缺省用默认值） ----------
-WFR="$(fm_field AGENTS.md workflow_root)"
+WFR="$(fm_field AGENTS.md workflow_root)" || exit 1
 [ -n "$WFR" ] || WFR=".agent"
+python3 "$SCRIPT_DIR/workflow_io.py" path . "$WFR" || exit 1
 
 # ---------- 1) 必需项 ----------
 missing=()
@@ -98,17 +106,19 @@ check_task() { # <任务目录> <yes|no 是否检查停滞>
   name="$(basename "$d")"
   h="${d}handoff.md"
 
+  for f in brief.md plan.md handoff.md; do
+    [ -f "${d}${f}" ] || problem "$d 缺少 $f"
+  done
   case "$name" in
     [0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-*|[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9]-*) ;;
     *) warn "$d 缺少日期前缀（约定 YYYYMMDD-短语），日后不好按时间排序与去重" ;;
   esac
 
   if [ ! -f "$h" ]; then
-    problem "$d 缺少 handoff.md"
     return 0
   fi
 
-  t="$(fm_field "$h" task)"
+  t="$(fm_field "$h" task)" || { problem "$h 的 front-matter 无效"; return 0; }
   if [ -z "$t" ]; then
     problem "$h 缺少 front-matter 的 task"
   elif [ "$t" != "$name" ]; then
@@ -129,6 +139,13 @@ check_task() { # <任务目录> <yes|no 是否检查停滞>
     problem "$h 的 phase 非法: $ph"
   fi
 
+  if [ "$want_stale" = yes ]; then
+    case "$st" in done|abandoned) problem "$h 已结束但仍留在 active，请归档" ;; esac
+  else
+    case "$st" in done|abandoned) ;; *) problem "$h 归档任务必须是 done 或 abandoned" ;; esac
+  fi
+  if [ "$st" = done ] && [ "$ph" != close ]; then problem "$h 的 done 必须对应 close 阶段"; fi
+
   up="$(fm_field "$h" updated)"
   if [ -z "$up" ]; then
     problem "$h 缺少 front-matter 的 updated"
@@ -136,6 +153,8 @@ check_task() { # <任务目录> <yes|no 是否检查停滞>
     ep="$(to_epoch "$up")"
     if [ -z "$ep" ]; then
       problem "$h 的 updated 格式不对（应为 YYYY-MM-DD 或 YYYY-MM-DD HH:MM）: $up"
+    elif [ "$ep" -gt "$(( $(date +%s) + 300 ))" ]; then
+      problem "$h 的 updated 是未来时间"
     elif [ "$want_stale" = "yes" ]; then
       now="$(date +%s)"
       age=$(( (now - ep) / 86400 ))
@@ -147,15 +166,15 @@ check_task() { # <任务目录> <yes|no 是否检查停滞>
 
   ow="$(fm_field "$h" owner)"
   case "$ow" in
-    *"<"*) warn "负责人未填 $h" ;;
+    ""|*"<"*) problem "负责人未填 $h" ;;
   esac
 
   br="$(fm_field "$h" branch)"
   case "$br" in
-    ""|"<"*|none|main|master)
-      : ;;
+    ""|*"<"*) problem "$h 的 branch 未填" ;;
+    none|main|master) : ;;
     *)
-      if [ "$IS_GIT" = yes ] && ! git show-ref --verify --quiet "refs/heads/$br"; then
+      if [ "$IS_GIT" = yes ] && [ "$want_stale" = yes ] && [ -z "$(git for-each-ref --format='%(refname)' "refs/heads/$br" "refs/remotes/*/$br")" ]; then
         warn "$h 的 branch（$br）在本地找不到对应分支（可能已合并删除）"
       fi
       ;;
@@ -181,26 +200,32 @@ fi
 if [ -d "$WFR/work/archive" ]; then
   shopt -s nullglob
   for d in "$WFR"/work/archive/*/; do
-    [ -f "${d}handoff.md" ] || problem "$d 缺少 handoff.md"
+    check_task "$d" no
   done
   shopt -u nullglob
 fi
 
 # ---------- 5) Git 约定 ----------
 if [ "$IS_GIT" = yes ]; then
-  if ! git check-ignore -q -- "$WFR" 2>/dev/null; then
-    warn "工作流目录 $WFR 未被 .gitignore 排除——个人工作流内容会跟着代码一起被提交"
+  tracked="$(GIT_LITERAL_PATHSPECS=1 git ls-files -- "$WFR/")"
+  if [ -n "$tracked" ]; then
+    if [ "$STRICT" = yes ]; then problem "工作流目录 $WFR 已被 Git 跟踪，请从索引移除个人文件"; else warn "工作流目录 $WFR 已被 Git 跟踪（修改 .gitignore 不会取消跟踪）"; fi
+  elif ! git check-ignore -q -- "$WFR/" 2>/dev/null; then
+    warn "工作流目录 $WFR 未被 .gitignore 排除"
   fi
   if git ls-files --error-unmatch AGENTS.md >/dev/null 2>&1; then
-    warn "AGENTS.md 已被 Git 跟踪——默认工作流只在本地使用；共享这套规则时再显式提交它"
+    shared="$(git show :AGENTS.md | python3 "$SCRIPT_DIR/workflow_io.py" field - workflow_shared_agents)"
+    if [ "$STRICT" = yes ] && [ "$shared" != true ]; then
+      problem "AGENTS.md 已被跟踪；团队确认共用时设置 workflow_shared_agents: true，否则从索引移除"
+    elif [ "$shared" != true ]; then
+      warn "AGENTS.md 已被跟踪；团队共享需显式设置 workflow_shared_agents: true"
+    fi
   elif ! git check-ignore -q -- AGENTS.md 2>/dev/null; then
-    warn "AGENTS.md 未被 .gitignore 排除——它会进入后续的代码提交"
+    warn "AGENTS.md 未被 .gitignore 排除"
   fi
+  # git ls-files 使用本次提交的索引，包含 add -f 的新文件；删除已暂存的文件不再阻止。
+  # 消息由 commit-msg 检查，不读取上一次提交。
 
-  subject="$(git log -1 --pretty=%s 2>/dev/null || true)"
-  if [ -n "$subject" ] && ! grep -qE '^([a-z]+\([^)]+\)|[0-9]+\.[0-9]+\.[0-9]+): .+' <<<"$subject"; then
-    warn "最近一次提交信息不符合约定格式（应为 <type>(<任务目录名>): <说明>，或版本提交 <版本>: <说明>）: $subject"
-  fi
 else
   warn "不在 Git 仓库中：协议降级为「仅本地」，跨机器 / 跨 Agent 恢复与历史追溯都会失效"
 fi
@@ -209,6 +234,17 @@ fi
 refd="$WFR/references"
 if [ -d "$refd" ] && [ -n "$(ls -A "$refd" 2>/dev/null)" ] && [ ! -f "$refd/README.md" ]; then
   warn "$refd 里有内容但没有 README.md 索引——记下来源、导入时间与用途，否则日后没人知道它从哪来"
+fi
+
+# ---------- 7) 入口升级状态（只检测，不改写） ----------
+if [ -f AGENTS.md ] && command -v python3 >/dev/null 2>&1; then
+  upgrade_output="$(python3 "$SCRIPT_DIR/update-project.py" . --check 2>&1)"
+  upgrade_code=$?
+  case "$upgrade_code" in
+    0) ;;
+    3) warn "工作流入口有可用更新：python3 $SCRIPT_DIR/update-project.py .（仅预览）" ;;
+    *) warn "工作流升级需处理：$upgrade_output" ;;
+  esac
 fi
 
 if [ "$status" -eq 0 ]; then

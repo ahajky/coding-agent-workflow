@@ -108,3 +108,11 @@ front-matter 让冲突**可见**，但不解决覆盖。约定：
 2. 修剪 `handoff.md`，只留对后人有用的事实（结论、关键文件、验证证据、遗留问题）。
 3. 把任务目录从 `.agent/work/active/` 移到 `.agent/work/archive/`（普通 `mv`，工作流目录不在 Git 里）。
 4. 任务分支合并回 `main` 后删除。具体见 [git-workflow.md](git-workflow.md)。
+
+## 自动检查的生命周期规则
+
+active 与 archive 中均要求 brief / plan / handoff，检查 front-matter 的 task、status、phase、owner、updated、branch。owner 与 branch 不得为空或占位；updated 不得比本机时钟超前 5 分钟；done 必须对应 close；done / abandoned 任务须移出 active，archive 只接受这两个结束状态。已有历史档案缺文档时需补最小真实说明，不编造不存在的过程。
+
+active 的代码分支允许只存在于远程引用；archive 不要求分支仍存在。简单 scalar front-matter 支持引号及 CRLF，复杂 YAML 对象仍不支持。
+
+归档后可运行 `archive-index.py <项目根> --write` 重建可删除索引，查询用 `--query` 实时读取任务文档。索引不人工维护状态，详见 [归档与迁移](archive-and-migration.md)。
