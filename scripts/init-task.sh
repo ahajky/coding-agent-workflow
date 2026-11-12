@@ -60,7 +60,16 @@ if [ -e "$TASK_DIR" ]; then
   exit 1
 fi
 
-mkdir -p "$TASK_DIR"
+# 先切换分支，失败时不留下任务半成品。
+if [ -n "$BRANCH" ] && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  [ "$BRANCH" != auto ] || BRANCH="codex/$(basename "$TASK_DIR")"
+  if git show-ref --verify --quiet "refs/heads/$BRANCH"; then
+    git switch "$BRANCH"
+  else
+    git switch -c "$BRANCH"
+  fi
+fi
+mkdir -p "$TASK_DIR/scratch"
 
 render() {
   local tpl="$TEMPLATES_DIR/$1" out="$TASK_DIR/$2"
@@ -69,7 +78,7 @@ render() {
     return 1
   fi
   if [ -n "$TITLE" ]; then
-    sed "s/<任务标题>/$TITLE/g" "$tpl" > "$out"
+    python3 -c 'import pathlib,sys; print(pathlib.Path(sys.argv[1]).read_text().replace("<任务标题>",sys.argv[2]),end="")' "$tpl" "$TITLE" > "$out"
   else
     cp "$tpl" "$out"
   fi
@@ -84,36 +93,23 @@ TASK_NAME="$(basename "$TASK_DIR")"
 NOW="$(date '+%Y-%m-%d %H:%M')"
 HANDOFF="$TASK_DIR/handoff.md"
 
-sed_inplace() { # <表达式> <文件>
-  if sed --version >/dev/null 2>&1; then
-    sed -i "$1" "$2"
-  else
-    sed -i '' "$1" "$2"
-  fi
-}
+python3 - "$HANDOFF" "$TASK_NAME" "$NOW" <<'PYCODE'
+from pathlib import Path
+import sys
+p=Path(sys.argv[1]);p.write_text(p.read_text().replace('<任务目录名>',sys.argv[2]).replace('<YYYY-MM-DD HH:MM>',sys.argv[3]))
+PYCODE
 
-if [ -f "$HANDOFF" ]; then
-  sed_inplace "s|<任务目录名>|$TASK_NAME|g; s|<YYYY-MM-DD HH:MM>|$NOW|g" "$HANDOFF"
+# 回填实际分支；不使用 Git 时明确为 none。
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  BRANCH="$(git symbolic-ref --short -q HEAD || echo none)"
+else
+  BRANCH=none
 fi
-
-# 可选：一并创建任务分支（--branch <分支名|auto>）
-if [ -n "$BRANCH" ]; then
-  if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    echo "提醒: 不在 Git 仓库中，跳过建分支（handoff 的 branch 字段请填 none）" >&2
-  else
-    if [ "$BRANCH" = "auto" ]; then
-      BRANCH="feat/$TASK_NAME"
-    fi
-    if git show-ref --verify --quiet "refs/heads/$BRANCH"; then
-      echo "提醒: 分支 $BRANCH 已存在，直接切换" >&2
-      git switch "$BRANCH"
-    else
-      git switch -c "$BRANCH"
-    fi
-    sed_inplace "s|^branch: .*|branch: $BRANCH|" "$HANDOFF"
-    echo "已切换到分支: $BRANCH"
-  fi
-fi
+python3 - "$HANDOFF" "$BRANCH" <<'PYCODE'
+from pathlib import Path
+import re,sys
+p=Path(sys.argv[1]);p.write_text(re.sub(r'^branch: .*$',lambda m:'branch: '+sys.argv[2],p.read_text(),flags=re.M))
+PYCODE
 
 echo "已创建任务工作区: $TASK_DIR"
 ls -1 "$TASK_DIR"

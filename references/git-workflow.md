@@ -20,7 +20,7 @@
 ## 2. 分支
 
 - **一任务一分支**（或一 Agent 一 worktree）；单文件小修、纯文档改动可以直接做在 `main` 上。
-- 命名 `<type>/<任务目录名>`，例如 `feat/20261016-add-auth`。日期是任务主键的一部分，不是随手加的。
+- 默认命名 `codex/<任务目录名>`（`--branch auto`）；显式 `--branch` 可使用项目约定的 `<type>/<任务目录名>`，例如 `feat/20261016-add-auth`。日期是任务主键的一部分，不是随手加的。
 - 开了分支就把名字写进 `handoff.md` 的 `branch` 字段。
 - 不要在多条分支上并行新建同名任务目录；分支合并回 `main` 后删除。
 - 并行时用 worktree 隔离，放在项目同级目录：
@@ -78,9 +78,19 @@ mv .agent/work/active/<任务> .agent/work/archive/<任务>
 | `AGENTS.md` 是否按本地工作流策略忽略 | `check-project.sh`（只提醒） |
 | 工作流目录 `.agent/` 是否被 `.gitignore` 排除 | `check-project.sh`（只提醒） |
 | `handoff.md` 的 `branch` 是否指向存在的分支 | `check-project.sh` |
-| 最近一次提交的信息格式 | `check-project.sh`（只提醒） |
-| 提交前自动跑以上检查 | 可选：`scripts/install-git-hooks.sh` |
+| 本次提交的信息格式 | `check-commit-message.py`，由 commit-msg 钩子读取 Git 提供的消息文件 |
+| 提交前自动跑以上检查 | 可选：`scripts/install-git-hooks.sh`（pre-commit + commit-msg） |
 
 ## 8. 不用 Git 的项目
 
 协议降级为"仅本地"：跨机器、跨 Agent 协作与历史追溯都会失效。需要显式接受这个代价，`handoff.md` 的 `branch` 留空或写 `none`；第 2–5 节不适用。
+
+## 提交门禁的实际行为
+
+安装钩子后，pre-commit 运行 `check-project.sh <项目根> --strict`，检查任务状态和索引。工作流目录被跟踪会阻止提交；团队确认共享入口时，在 AGENTS front-matter 设置 `workflow_shared_agents: true` 才允许跟踪 AGENTS（以本次索引中的入口为准，未暂存的开关不生效）。该开关不允许将个人工作流目录整体入库。普通检查模式对跟踪策略给提醒，strict 将其升级为错误；占位正文、停滞和可用升级等仍是提醒。
+
+commit-msg 检查 Git 为本次提交提供的消息文件，支持 `<type>(<任务或模块>): <说明>`、`<版本>: <说明>`，以及 Git 生成的 Merge / Revert 标题。它不再读取最近一次提交来推断本次消息。
+
+安装会先检查两个钩子是否归本工具所有，任一存在其他工具钩子则均不覆盖。遵循目标仓库的 core.hooksPath 和 worktree 路径。在仓库本地配置 `codingAgentWorkflow.scripts` 中记录工具目录，技能移动后重新安装或更新此配置；找不到工具会阻止提交并说明原因。
+
+门禁是本地可选能力，可通过 `--no-verify` 绕过。它检查工作区规则与 Git 索引，并不等同于隔离检出暂存代码后重跑构建；语义文档归属、数据脱敏、业务测试仍需评审与项目自身的 CI。
