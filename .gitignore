@@ -2,3 +2,7 @@
 .DS_Store
 /git操作规范/
 
+
+# coding-agent-workflow：个人工作流，不进代码提交
+.agent/
+AGENTS.md

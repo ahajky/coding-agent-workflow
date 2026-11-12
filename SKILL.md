@@ -14,10 +14,10 @@ metadata:
 核心原则：
 
 - **文件是事实来源，对话只是临时工作界面。**
-- **工作流产出集中在一个目录（默认 `.agent/`），只属于使用者本人**；进入团队仓库的内容要经过"沉淀"。
+- **个人工作流以根目录 `AGENTS.md` 为入口、以工作流目录（默认 `.agent/`）为主体，二者默认都不进 Git**；进入团队仓库的内容要经过"沉淀"。
 - **同一份信息只有一个权威来源**（见 `references/file-conventions.md`）。
 - **只保留降低未来理解/决策/重复劳动成本的产出**（见 `references/artifact-policy.md`）。
-- **不因为规则而制造文档**：文件按需生成，简单任务可以只有代码和一份 `handoff.md`。
+- **不因为规则而制造文档**：文件按需生成，任务的 brief / plan / handoff 内容可短；单份可复用知识说明可直接写入 docs/guides，无须为存放它新建任务。
 
 ## 何时触发
 
@@ -48,6 +48,10 @@ metadata:
 ### 3. 按阶段推进
 
 六阶段：发现 → 设计 → 计划 → 实施 → 验证 → 交接。各阶段的进入/退出条件和循环回退规则见 `references/workflow.md`。这是可循环流程，不是单向前进的流水线。
+
+### 文档写入前确认归属
+
+每次会话开始项目工作前核对 AGENTS.md 的路径映射和文档路由。每次新建或更新文档前，按 `references/file-conventions.md` 的「文档写入前的归属判断」查已有权威文档、确认具体路径。知识讲解、机制解释与场景说明默认进工作流的 `docs/guides/`；用户指定位置与项目正式文档位置优先。收工核对新文档归属、重复维护与链接，相关任务的 handoff 回链。当前检查脚本不验证语义归属。
 
 ### 4. 阶段切换时检查产出质量
 
@@ -94,7 +98,7 @@ metadata:
 
 以下脚本位于**本技能的 `scripts/`**（注意与项目自己的 `scripts/` 区分）：
 
-- `scripts/init-project.sh [项目根] [--name 项目名] [--workflow-root 目录]`：生成 `AGENTS.md`、`README.md` 与工作流目录（默认 `.agent/`，不覆盖已存在文件），并把该目录写进 `.gitignore`；路径映射写进 `AGENTS.md` 的 front-matter。
+- `scripts/init-project.sh [项目根] [--name 项目名] [--workflow-root 目录]`：生成 `AGENTS.md`、`README.md` 与工作流目录（默认 `.agent/`，不覆盖已存在文件），并把 `AGENTS.md` 和工作流目录写入 `.gitignore`；路径映射写进 `AGENTS.md` 的 front-matter。
 - `scripts/init-task.sh <任务目录> [--title 标题] [--branch <分支名|auto>]`：创建任务工作区（`brief.md`、`plan.md`、`handoff.md`）并填好 `handoff` 的 front-matter；目录名缺日期前缀时自动补当天日期；`--branch` 会一并创建任务分支并写入 `branch` 字段。
 - `scripts/check-project.sh [项目根]`：按 `workflow_root` 检查工作流目录与任务；校验每个任务的 front-matter（`task` 与目录名一致、`status`/`phase` 取值合法、`updated` 格式正确、`branch` 指向的代码分支是否存在）；检查 Git 约定（工作流目录是否被忽略、提交信息格式）；提醒未填占位符与停滞任务（`STALE_DAYS` 可调，默认 30）。
 - `scripts/install-git-hooks.sh [项目根]`：安装（可选的）`pre-commit` 钩子，提交前自动跑 `check-project.sh`。

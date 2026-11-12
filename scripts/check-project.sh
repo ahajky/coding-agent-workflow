@@ -189,7 +189,12 @@ fi
 # ---------- 5) Git 约定 ----------
 if [ "$IS_GIT" = yes ]; then
   if ! git check-ignore -q -- "$WFR" 2>/dev/null; then
-    warn "工作流目录 $WFR 未被 .gitignore 排除——多人协作时它会跟着代码一起被提交"
+    warn "工作流目录 $WFR 未被 .gitignore 排除——个人工作流内容会跟着代码一起被提交"
+  fi
+  if git ls-files --error-unmatch AGENTS.md >/dev/null 2>&1; then
+    warn "AGENTS.md 已被 Git 跟踪——默认工作流只在本地使用；共享这套规则时再显式提交它"
+  elif ! git check-ignore -q -- AGENTS.md 2>/dev/null; then
+    warn "AGENTS.md 未被 .gitignore 排除——它会进入后续的代码提交"
   fi
 
   subject="$(git log -1 --pretty=%s 2>/dev/null || true)"

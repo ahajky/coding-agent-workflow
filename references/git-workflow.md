@@ -10,10 +10,10 @@
 | 内容 | 进 Git | 说明 |
 | --- | --- | --- |
 | 代码与项目正式文档 | 是 | `src/`、`tests/`、`scripts/`、项目自己的 `docs/` |
-| `AGENTS.md` | 是 | 只写规则，不含个人笔记；团队共用这套规则时需要它 |
+| `AGENTS.md` | 默认否 | 本地 Agent 入口；Codex 会读取被忽略的文件。团队确认共用这套规则时才显式提交 |
 | 工作流目录 `.agent/`（`docs/` `work/` `reports/` `references/`） | 否 | 个人工作记忆，默认 gitignore；任务对应哪个分支写在 `handoff.md` 的 `branch` 字段 |
 
-- **代码提交里不出现工作流的内容。** 提交只回答"代码为什么变成这样"，不承担保存个人笔记的职责；团队 Review 时也不该被这些文件干扰。
+- **代码提交里不出现工作流的内容。** `AGENTS.md` 与 `.agent/` 默认都留在本地；提交只回答"代码为什么变成这样"，不承担保存个人工作记录的职责。
 - **不要在仓库级忽略 `*.log` / `*.tmp`**：会误伤需要跟踪的日志样本与测试夹具。
 - **密钥、凭证、客户数据不入库。** 进了历史就等于泄露——删文件、回滚提交都不解除风险，必须轮换。
 
@@ -75,6 +75,7 @@ mv .agent/work/active/<任务> .agent/work/archive/<任务>
 | 检查项 | 谁做 |
 | --- | --- |
 | 是否在 Git 仓库里；不在则降级为"仅本地" | `check-project.sh` |
+| `AGENTS.md` 是否按本地工作流策略忽略 | `check-project.sh`（只提醒） |
 | 工作流目录 `.agent/` 是否被 `.gitignore` 排除 | `check-project.sh`（只提醒） |
 | `handoff.md` 的 `branch` 是否指向存在的分支 | `check-project.sh` |
 | 最近一次提交的信息格式 | `check-project.sh`（只提醒） |

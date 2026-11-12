@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # 为一个项目接入协作工作流：生成 AGENTS.md、README.md 与工作流目录。
-# 工作流的所有产出集中在 workflow_root（默认 .agent/），并默认排除在项目版本控制之外。
+# 工作流的个人产出集中在 workflow_root（默认 .agent/），入口 AGENTS.md 留在根目录，
+# 两者默认都排除在项目版本控制之外。
 # 已存在的文件不会被覆盖。
 # 用法: init-project.sh [项目根目录] [--name 项目名] [--workflow-root 目录]
 set -euo pipefail
@@ -17,9 +18,9 @@ while [ $# -gt 0 ]; do
     -h|--help)
       echo "用法: init-project.sh [项目根目录] [--name 项目名] [--workflow-root 目录]"
       echo ""
-      echo "  --workflow-root  工作流目录，所有产出都放在它下面（默认 .agent）"
+      echo "  --workflow-root  工作流目录，状态与过程产出都放在它下面（默认 .agent）"
       echo ""
-      echo "该目录默认写入 .gitignore：工作流内容不进代码提交。"
+      echo "AGENTS.md 与工作流目录默认写入 .gitignore：个人工作流内容不进代码提交。"
       exit 0
       ;;
     --name)
@@ -111,17 +112,28 @@ if [ "$agents_new" = yes ] && [ -f "$agents" ]; then
   fi
 fi
 
-# 工作流目录不进版本控制；.gitignore 不存在则创建（>> 会自动创建）
+# 个人工作流不进版本控制；.gitignore 不存在则创建（>> 会自动创建）
 gi="$ROOT/.gitignore"
-if grep -q "coding-agent-workflow" "$gi" 2>/dev/null; then
-  : # 已经写过，不重复追加
-else
+gi_changed=no
+if ! grep -q "coding-agent-workflow" "$gi" 2>/dev/null; then
   {
     echo ""
-    echo "# coding-agent-workflow：个人工作记忆，不进代码提交"
-    echo "$WFR/"
+    echo "# coding-agent-workflow：个人工作流，不进代码提交"
   } >> "$gi"
+  gi_changed=yes
+fi
+for ignore_entry in "$WFR/" "AGENTS.md"; do
+  if ! grep -Fxq "$ignore_entry" "$gi" 2>/dev/null; then
+    echo "$ignore_entry" >> "$gi"
+    gi_changed=yes
+  fi
+done
+if [ "$gi_changed" = yes ]; then
   echo "更新: .gitignore"
+fi
+
+if git -C "$ROOT" ls-files --error-unmatch AGENTS.md >/dev/null 2>&1; then
+  echo "提醒: AGENTS.md 已被 Git 跟踪。新增忽略不会取消跟踪；要让工作流只留在本地，请执行: git -C \"$ROOT\" rm --cached AGENTS.md"
 fi
 
 echo "已创建 $created 个文件，跳过 $skipped 个已存在文件。"
